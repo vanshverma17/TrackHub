@@ -50,12 +50,8 @@ TrackHub solves this by providing a **single dashboard** to monitor everything i
 ```text
 TrackHub/
 │
-├── client/        # React frontend
-├── server/        # Node + Express backend
-│   ├── models/
-│   ├── routes/
-│   ├── controllers/
-│   ├── middleware/
+├── frontend/        # React frontend
+├── backend/        # Node + Express backend
 │
 ├── README.md
 └── package.json
