@@ -45,10 +45,9 @@ TrackHub solves this by providing a **single dashboard** to monitor everything i
 - Postman
 - VS Code
 
----
+## 📂 Project Structure
 
-## 🏗 Project Structure
-
+```text
 TrackHub/
 │
 ├── client/        # React frontend
@@ -60,8 +59,7 @@ TrackHub/
 │
 ├── README.md
 └── package.json
-
----
+```
 
 ## 🚧 Project Status
 
