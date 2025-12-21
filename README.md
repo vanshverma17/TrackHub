@@ -51,16 +51,15 @@ TrackHub solves this by providing a **single dashboard** to monitor everything i
 
 TrackHub/
 │
-├── client/ # React frontend
-├── server/ # Node + Express backend
-│ ├── models/
-│ ├── routes/
-│ ├── controllers/
-│ ├── middleware/
+├── client/        # React frontend
+├── server/        # Node + Express backend
+│   ├── models/
+│   ├── routes/
+│   ├── controllers/
+│   ├── middleware/
 │
 ├── README.md
 └── package.json
-
 
 ---
 
