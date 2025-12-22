@@ -1,4 +1,4 @@
-import './App.css'
+import './index.css'
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Dashboard from './pages/Dashboard'
 import SignIn from './pages/SignIn'
@@ -17,7 +17,6 @@ function AppWrapper() {
     </div>
   );
 }
-
 
 function App() {
 
