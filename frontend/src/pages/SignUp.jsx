@@ -6,6 +6,7 @@ const SignUp = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         firstName: "",
+        email: "",
         password: "",
         agreeToTerms: false
     });
@@ -28,136 +29,158 @@ const SignUp = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black flex justify-center items-center p-5">
-            <div className="flex w-full max-w-[1200px] h-[600px] bg-gradient-to-br from-[#0a1628] to-[#0d1b2a] rounded-3xl overflow-hidden border border-teal-500/20 shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_100px_rgba(20,184,166,0.1)]">
+        <div className="min-h-screen bg-black text-white flex">
+            {/* Left Side - Dashboard Graphics */}
+            <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center p-12">
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 via-transparent to-transparent"></div>
                 
-                {/* Left Panel - Dashboard Preview */}
-                <div className="flex-1 bg-gradient-to-br from-[#0a1a28] to-[#0d1520] p-10 flex flex-col justify-between relative overflow-hidden">
-                    <div className="flex-1 flex flex-col gap-5">
-                        {/* Top Row */}
-                        <div className="flex gap-5 flex-1">
-                            <div className="flex-1 bg-teal-500/5 border border-teal-500/20 rounded-xl p-4">
-                                <div className="w-12 h-12 rounded-full border-[3px] border-teal-500 border-t-transparent border-r-transparent rotate-45 mx-auto my-2"></div>
-                                <div className="mt-4 flex flex-col gap-1">
-                                    <div className="h-0.5 bg-teal-500/40 rounded"></div>
-                                    <div className="h-0.5 bg-teal-500/40 rounded"></div>
-                                    <div className="h-0.5 bg-teal-500/40 rounded"></div>
+                {/* TrackHub Text - Fixed at Bottom */}
+                <div className="absolute bottom-8 left-8 text-gray-400 text-xl">
+                    <span className="text-2xl font-bold text-white">TrackHub</span> - Track. Build. Improve.
+                </div>
+                
+                <div className="relative z-10 w-full max-w-2xl">
+                    {/* Futuristic Dashboard Illustration */}
+                    <div className="space-y-8">
+                        {/* Top Row - Charts */}
+                        <div className="flex gap-4 animate-fade-in">
+                            <div className="flex-1 border border-cyan-500/30 rounded-lg p-4 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-8 h-8 rounded-full border-2 border-cyan-400/50 animate-pulse"></div>
+                                    <div className="flex-1 space-y-1">
+                                        <div className="h-1 bg-cyan-500/30 rounded animate-pulse"></div>
+                                        <div className="h-1 bg-cyan-500/20 rounded w-3/4 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-1 items-end h-20">
+                                    <div className="w-2 bg-cyan-500/40 rounded-t animate-chart-grow" style={{height: '40%', animationDelay: '0.1s'}}></div>
+                                    <div className="w-2 bg-cyan-500/40 rounded-t animate-chart-grow" style={{height: '70%', animationDelay: '0.2s'}}></div>
+                                    <div className="w-2 bg-cyan-500/40 rounded-t animate-chart-grow" style={{height: '50%', animationDelay: '0.3s'}}></div>
+                                    <div className="w-2 bg-cyan-500/60 rounded-t animate-chart-grow" style={{height: '90%', animationDelay: '0.4s'}}></div>
+                                    <div className="w-2 bg-cyan-500/40 rounded-t animate-chart-grow" style={{height: '60%', animationDelay: '0.5s'}}></div>
                                 </div>
                             </div>
-                            <div className="flex-1 bg-teal-500/5 border border-teal-500/20 rounded-xl p-4 flex items-center justify-center">
-                                <div className="w-14 h-14 rounded-full border-4 border-teal-500/20 border-t-teal-500 border-r-teal-500"></div>
+                            <div className="w-32 border border-cyan-500/30 rounded-lg p-4 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300">
+                                <div className="space-y-2">
+                                    <div className="flex gap-1">
+                                        {[...Array(5)].map((_, i) => (
+                                            <div key={i} className="w-2 h-2 rounded-full bg-cyan-500/30 animate-pulse" style={{animationDelay: `${i * 0.1}s`}}></div>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-1">
+                                        {[...Array(5)].map((_, i) => (
+                                            <div key={i} className="w-2 h-2 rounded-full bg-cyan-500/30 animate-pulse" style={{animationDelay: `${i * 0.1 + 0.5}s`}}></div>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-1">
+                                        {[...Array(5)].map((_, i) => (
+                                            <div key={i} className="w-2 h-2 rounded-full bg-cyan-500/30 animate-pulse" style={{animationDelay: `${i * 0.1 + 1}s`}}></div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex-1 bg-teal-500/5 border border-teal-500/20 rounded-xl p-4 relative">
-                                {[...Array(25)].map((_, i) => (
+                        </div>
+
+                        {/* Middle Row - Graph */}
+                        <div className="border border-cyan-500/30 rounded-lg p-6 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300 animate-fade-in" style={{animationDelay: '0.3s'}}>
+                            <div className="flex items-end gap-1 h-32">
+                                {[30, 60, 45, 80, 50, 90, 70, 85, 60, 75, 55, 95].map((height, i) => (
                                     <div 
                                         key={i} 
-                                        className="absolute w-1 h-1 bg-purple-500 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.8)]"
-                                        style={{
-                                            left: `${Math.random() * 80 + 10}%`,
-                                            top: `${Math.random() * 80 + 10}%`,
-                                        }}
+                                        className="flex-1 bg-gradient-to-t from-cyan-500/60 to-cyan-500/20 rounded-t animate-chart-grow hover:from-cyan-500/80 hover:to-cyan-500/40 transition-all duration-300"
+                                        style={{height: `${height}%`, animationDelay: `${i * 0.1}s`}}
                                     ></div>
                                 ))}
                             </div>
                         </div>
-                        
-                        {/* Middle Row */}
-                        <div className="flex gap-5 flex-1">
-                            <div className="flex-1 bg-teal-500/5 border border-teal-500/20 rounded-xl p-4 flex items-center justify-center">
-                                <div className="w-0 h-0 border-l-[30px] border-l-transparent border-r-[30px] border-r-transparent border-b-[50px] border-b-teal-500 opacity-60"></div>
-                            </div>
-                            <div className="flex-1 bg-teal-500/5 border border-teal-500/20 rounded-xl p-4">
-                                <div className="flex items-end justify-around h-full gap-1.5 py-2">
-                                    {[...Array(8)].map((_, i) => (
-                                        <div 
-                                            key={i} 
-                                            className="flex-1 bg-gradient-to-t from-teal-500 to-teal-500/30 rounded-t min-h-[20%]"
-                                            style={{ height: `${Math.random() * 60 + 20}%` }}
-                                        ></div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="flex-1 bg-teal-500/5 border border-teal-500/20 rounded-xl p-4">
-                                <div className="flex flex-col gap-2 justify-center h-full">
-                                    {[...Array(6)].map((_, i) => (
-                                        <div key={i} className="h-0.5 bg-gradient-to-r from-teal-500 to-teal-500/20 rounded"></div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Bottom Row */}
-                        <div className="flex gap-5 flex-1">
-                            <div className="flex-1 bg-teal-500/5 border border-teal-500/20 rounded-xl p-4 flex items-center justify-center">
-                                <div className="w-14 h-7 border-4 border-teal-500 border-b-0 rounded-t-full"></div>
-                            </div>
-                            <div className="flex-1 bg-teal-500/5 border border-teal-500/20 rounded-xl p-4 relative">
-                                <div className="flex items-end h-full">
-                                    {[...Array(10)].map((_, i) => (
-                                        <div 
-                                            key={i} 
-                                            className="absolute w-0.5 bg-teal-500 rounded"
-                                            style={{
-                                                height: `${Math.random() * 60 + 20}%`,
-                                                left: `${i * 10}%`
-                                            }}
-                                        ></div>
-                                    ))}
+                        {/* Bottom Row - Circular & Stats */}
+                        <div className="flex gap-4 animate-fade-in" style={{animationDelay: '0.5s'}}>
+                            <div className="w-32 border border-cyan-500/30 rounded-lg p-4 bg-gray-900/50 backdrop-blur flex items-center justify-center hover:border-cyan-500/50 transition-all duration-300">
+                                <div className="relative w-20 h-20">
+                                    <div className="absolute inset-0 rounded-full border-4 border-cyan-500/30"></div>
+                                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-cyan-500 border-r-cyan-500 animate-spin-slow"></div>
                                 </div>
                             </div>
-                            <div className="flex-1 bg-teal-500/5 border border-teal-500/20 rounded-xl p-4">
-                                <div className="flex flex-col gap-2 justify-center h-full">
-                                    {[...Array(4)].map((_, i) => (
-                                        <div key={i} className="h-1.5 bg-teal-500/20 rounded overflow-hidden">
-                                            <div 
-                                                className="h-full bg-gradient-to-r from-teal-500 to-teal-600 rounded"
-                                                style={{ width: `${Math.random() * 60 + 30}%` }}
-                                            ></div>
-                                        </div>
-                                    ))}
+                            <div className="flex-1 border border-cyan-500/30 rounded-lg p-4 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1 flex-1 bg-cyan-500/40 rounded animate-progress-bar"></div>
+                                        <div className="h-1 w-8 bg-cyan-500/20 rounded"></div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1 w-20 bg-cyan-500/30 rounded animate-progress-bar" style={{animationDelay: '0.3s'}}></div>
+                                        <div className="h-1 flex-1 bg-cyan-500/20 rounded"></div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1 flex-1 bg-cyan-500/40 rounded animate-progress-bar" style={{animationDelay: '0.6s'}}></div>
+                                        <div className="h-1 w-12 bg-cyan-500/20 rounded"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div className="text-white/70 text-base mt-5 tracking-wide">
-                        TrackHub - Track. Build. Improve.
                     </div>
                 </div>
+            </div>
 
-                {/* Right Panel - Sign Up Form */}
-                <div className="flex-[0.8] bg-[#0f172a]/60 flex items-center justify-center p-10">
-                    <div className="w-full max-w-md">
-                        <h1 className="text-[32px] font-bold text-white mb-2 text-center">Create an account</h1>
-                        <p className="text-[13px] text-white/50 mb-7 text-center">
-                            Already have account? <Link to="/signin" className="text-teal-500 font-semibold no-underline hover:text-teal-400 transition-colors">Log in</Link>
-                        </p>
-                        
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-                            <input
-                                type="text"
-                                name="firstName"
-                                placeholder="First Name"
-                                value={formData.firstName}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3.5 text-sm text-white bg-slate-700/80 border border-slate-500/30 rounded-lg outline-none transition-all duration-300 placeholder:text-white/40 focus:border-teal-500/50 focus:bg-slate-700"
-                                required
-                            />
+            {/* Right Side - Sign Up Form */}
+            <div className="flex-1 flex items-center justify-center p-8 lg:w-1/2">
+                <div className="w-full max-w-md">
+                    <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-2xl p-8 shadow-2xl">
+                        {/* Header */}
+                        <div className="mb-8 text-center">
+                            <h1 className="text-3xl font-bold mb-2">Create an Account</h1>
+                            <p className="text-gray-400 text-sm">
+                                Already have an account?{" "}
+                                <Link to="/" className="text-cyan-500 hover:text-cyan-400 transition">
+                                    Sign In
+                                </Link>
+                            </p>
+                        </div>
 
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {/* First Name Input */}
+                            <div>
+                                <input
+                                    type="text"
+                                    name="firstName"
+                                    placeholder="First Name"
+                                    value={formData.firstName}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
+                                    required
+                                />
+                            </div>
+
+                            {/* Email Input */}
+                            <div>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="Email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
+                                    required
+                                />
+                            </div>
+
+                            {/* Password Input */}
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     name="password"
-                                    placeholder="Enter your password"
+                                    placeholder="Password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3.5 text-sm text-white bg-slate-700/80 border border-slate-500/30 rounded-lg outline-none transition-all duration-300 placeholder:text-white/40 focus:border-teal-500/50 focus:bg-slate-700"
+                                    className="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
                                     required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-white/50 cursor-pointer p-1 flex items-center outline-none hover:text-white/70 transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition"
                                     aria-label="Toggle password visibility"
                                 >
                                     {showPassword ? (
@@ -174,25 +197,44 @@ const SignUp = () => {
                                 </button>
                             </div>
 
-                            <label className="flex items-center gap-2.5 cursor-pointer mt-1">
+                            {/* Terms Checkbox */}
+                            <label className="flex items-start gap-2 cursor-pointer">
                                 <input
                                     type="checkbox"
                                     name="agreeToTerms"
                                     checked={formData.agreeToTerms}
                                     onChange={handleChange}
-                                    className="w-[18px] h-[18px] cursor-pointer accent-teal-500"
+                                    className="w-4 h-4 mt-0.5 cursor-pointer accent-cyan-500"
                                     required
                                 />
-                                <span className="text-[13px] text-white/70">I agree to the Terms & Conditions</span>
+                                <span className="text-sm text-gray-400">
+                                    I agree to the Terms & Conditions
+                                </span>
                             </label>
 
-                            <p className="text-center text-white/50 text-[13px] my-2">Or register with</p>
+                            {/* Sign Up Button */}
+                            <button
+                                type="submit"
+                                className="w-full py-3 bg-transparent border-2 border-cyan-500 text-cyan-500 rounded-lg font-semibold hover:bg-cyan-500 hover:text-white transition duration-300"
+                            >
+                                Sign Up
+                            </button>
+
+                            {/* Social Sign Up */}
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-700"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-gray-900/50 text-gray-400">Or register with</span>
+                                </div>
+                            </div>
 
                             <div className="flex gap-3">
                                 <button
                                     type="button"
                                     onClick={() => handleSocialSignUp('Google')}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-500/30 border border-slate-500/40 rounded-lg text-white cursor-pointer transition-all duration-300 text-sm font-medium hover:bg-slate-500/40 hover:border-slate-400/50"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white hover:bg-gray-800 hover:border-gray-600 transition duration-300"
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -206,7 +248,7 @@ const SignUp = () => {
                                 <button
                                     type="button"
                                     onClick={() => handleSocialSignUp('Apple')}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-500/30 border border-slate-500/40 rounded-lg text-white cursor-pointer transition-all duration-300 text-sm font-medium hover:bg-slate-500/40 hover:border-slate-400/50"
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white hover:bg-gray-800 hover:border-gray-600 transition duration-300"
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" fill="currentColor"/>

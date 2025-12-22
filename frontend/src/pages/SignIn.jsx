@@ -9,8 +9,8 @@ const SignIn = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 via-transparent to-transparent"></div>
                 
                 {/* TrackHub Text - Fixed at Bottom */}
-                <div className="absolute bottom-8 left-8 text-gray-400 text-sm">
-                    <span className="font-semibold text-white">TrackHub</span> - Track. Build. Improve.
+                <div className="absolute bottom-8 left-8 text-gray-400 text-xl">
+                    <span className="text-2xl  font-bold text-white">TrackHub</span> - Track. Build. Improve.
                 </div>
                 
                 <div className="relative z-10 w-full max-w-2xl">
@@ -130,12 +130,17 @@ const SignIn = () => {
                             </div>
 
                             {/* Sign In Button */}
+                            <div>
+                                <Link className="pt-3" to='/dashboard'>
                             <button
                                 type="submit"
                                 className="w-full py-3 bg-transparent border-2 border-cyan-500 text-cyan-500 rounded-lg font-semibold hover:bg-cyan-500 hover:text-white transition duration-300"
                             >
                                 Sign In
                             </button>
+                            </Link>
+                            </div>
+                            
                         </form>
 
                         {/* Footer Links */}
