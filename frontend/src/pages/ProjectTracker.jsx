@@ -9,7 +9,7 @@ const ProjectTracker = () => {
     const [formData, setFormData] = useState({
         title: "",
         description: "",
-        tag: "FrontEnd",
+        tag: "",
         startDate: "",
         dueDate: ""
     });
@@ -112,7 +112,7 @@ const ProjectTracker = () => {
         setFormData({
             title: "",
             description: "",
-            tag: "FrontEnd",
+            tag: "",
             startDate: "",
             dueDate: ""
         });
@@ -189,7 +189,7 @@ const ProjectTracker = () => {
         setFormData({
             title: "",
             description: "",
-            tag: "FrontEnd",
+            tag: "",
             startDate: "",
             dueDate: ""
         });
@@ -398,16 +398,9 @@ const ProjectTracker = () => {
                                         required
                                         value={formData.tag}
                                         onChange={(e) => handleFormChange('tag', e.target.value)}
-                                        list="tag-suggestions"
                                         className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
-                                        placeholder="Enter or select a tag"
+                                        placeholder="Enter tag (e.g. FrontEnd, BackEnd, Design)"
                                     />
-                                    <datalist id="tag-suggestions">
-                                        <option value="FrontEnd" />
-                                        <option value="BackEnd" />
-                                        <option value="Design" />
-                                        <option value="Testing" />
-                                    </datalist>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
