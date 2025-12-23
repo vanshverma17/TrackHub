@@ -2,6 +2,18 @@ import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 
 const ProjectTracker = () => {
+    const colorOptions = {
+        blue: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30', solid: 'bg-blue-500', selectedBg: 'bg-blue-500/30', selectedBorder: 'border-blue-500' },
+        green: { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30', solid: 'bg-green-500', selectedBg: 'bg-green-500/30', selectedBorder: 'border-green-500' },
+        red: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30', solid: 'bg-red-500', selectedBg: 'bg-red-500/30', selectedBorder: 'border-red-500' },
+        yellow: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30', solid: 'bg-yellow-500', selectedBg: 'bg-yellow-500/30', selectedBorder: 'border-yellow-500' },
+        purple: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30', solid: 'bg-purple-500', selectedBg: 'bg-purple-500/30', selectedBorder: 'border-purple-500' },
+        orange: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30', solid: 'bg-orange-500', selectedBg: 'bg-orange-500/30', selectedBorder: 'border-orange-500' },
+        teal: { bg: 'bg-teal-500/20', text: 'text-teal-400', border: 'border-teal-500/30', solid: 'bg-teal-500', selectedBg: 'bg-teal-500/30', selectedBorder: 'border-teal-500' },
+        gray: { bg: 'bg-gray-500/20', text: 'text-gray-400', border: 'border-gray-500/30', solid: 'bg-gray-500', selectedBg: 'bg-gray-500/30', selectedBorder: 'border-gray-500' },
+        indigo: { bg: 'bg-indigo-500/20', text: 'text-indigo-400', border: 'border-indigo-500/30', solid: 'bg-indigo-500', selectedBg: 'bg-indigo-500/30', selectedBorder: 'border-indigo-500' },
+    };
+
     const [searchQuery, setSearchQuery] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [modalColumn, setModalColumn] = useState(null);
@@ -10,24 +22,25 @@ const ProjectTracker = () => {
         title: "",
         description: "",
         tag: "",
+        tagColor: "blue",
         startDate: "",
         dueDate: ""
     });
     
     const [tasks, setTasks] = useState({
         todo: [
-            { id: "IAT-4", title: "Customer & Item forms", description: "", tag: "FrontEnd", startDate: "Dec 20, 2025", dueDate: "Dec 27, 2025", assignee: null },
-            { id: "IAT-5", title: "Auth & Roles (Admin/Staff)", description: "", tag: "BackEnd", startDate: "Dec 21, 2025", dueDate: "Dec 27, 2025", assignee: null },
-            { id: "IAT-6", title: "Invoice schema", description: "", tag: "BackEnd", startDate: "Dec 22, 2025", dueDate: "Dec 27, 2025", assignee: null },
-            { id: "IAT-7", title: "Customer & item schema", description: "", tag: "BackEnd", startDate: "Dec 23, 2025", dueDate: "Dec 27, 2025", assignee: null },
-            { id: "IAT-8", title: "CRUD APIs", description: "", tag: "BackEnd", startDate: "Dec 24, 2025", dueDate: "Dec 27, 2025", assignee: null },
+            { id: "IAT-4", title: "Customer & Item forms", description: "", tag: "FrontEnd", tagColor: "blue", startDate: "Dec 20, 2025", dueDate: "Dec 27, 2025", assignee: null },
+            { id: "IAT-5", title: "Auth & Roles (Admin/Staff)", description: "", tag: "BackEnd", tagColor: "purple", startDate: "Dec 21, 2025", dueDate: "Dec 27, 2025", assignee: null },
+            { id: "IAT-6", title: "Invoice schema", description: "", tag: "BackEnd", tagColor: "purple", startDate: "Dec 22, 2025", dueDate: "Dec 27, 2025", assignee: null },
+            { id: "IAT-7", title: "Customer & item schema", description: "", tag: "BackEnd", tagColor: "purple", startDate: "Dec 23, 2025", dueDate: "Dec 27, 2025", assignee: null },
+            { id: "IAT-8", title: "CRUD APIs", description: "", tag: "BackEnd", tagColor: "purple", startDate: "Dec 24, 2025", dueDate: "Dec 27, 2025", assignee: null },
         ],
         inProgress: [
-            { id: "IAT-1", title: "Dashboard Layout", description: "", tag: "FrontEnd", startDate: "Dec 15, 2025", dueDate: "Dec 27, 2025", assignee: "W" },
-            { id: "IAT-2", title: "Invoice List", description: "", tag: "FrontEnd", startDate: "Dec 18, 2025", dueDate: "Dec 27, 2025", assignee: "W" },
+            { id: "IAT-1", title: "Dashboard Layout", description: "", tag: "FrontEnd", tagColor: "blue", startDate: "Dec 15, 2025", dueDate: "Dec 27, 2025", assignee: "W" },
+            { id: "IAT-2", title: "Invoice List", description: "", tag: "FrontEnd", tagColor: "blue", startDate: "Dec 18, 2025", dueDate: "Dec 27, 2025", assignee: "W" },
         ],
         done: [
-            { id: "IAT-3", title: "Create Invoice UI", description: "", tag: "FrontEnd", startDate: "Dec 10, 2025", dueDate: "Dec 27, 2025", assignee: "W", completed: true },
+            { id: "IAT-3", title: "Create Invoice UI", description: "", tag: "FrontEnd", tagColor: "blue", startDate: "Dec 10, 2025", dueDate: "Dec 27, 2025", assignee: "W", completed: true },
         ]
     });
 
@@ -113,6 +126,7 @@ const ProjectTracker = () => {
             title: "",
             description: "",
             tag: "",
+            tagColor: "blue",
             startDate: "",
             dueDate: ""
         });
@@ -144,6 +158,7 @@ const ProjectTracker = () => {
             title: task.title,
             description: task.description || "",
             tag: task.tag,
+            tagColor: task.tagColor || "blue",
             startDate: formatDateToInput(task.startDate),
             dueDate: formatDateToInput(task.dueDate)
         });
@@ -190,6 +205,7 @@ const ProjectTracker = () => {
             title: "",
             description: "",
             tag: "",
+            tagColor: "blue",
             startDate: "",
             dueDate: ""
         });
@@ -226,9 +242,7 @@ const ProjectTracker = () => {
             {task.description && (
                 <p className="text-gray-400 text-sm mb-2 line-clamp-2">{task.description}</p>
             )}
-            <span className={`inline-block px-2 py-1 rounded text-xs font-medium mb-3 ${
-                task.tag === "FrontEnd" ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30" : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-            }`}>
+            <span className={`inline-block px-2 py-1 rounded text-xs font-medium mb-3 ${colorOptions[task.tagColor || 'blue']?.bg || 'bg-blue-500/20'} ${colorOptions[task.tagColor || 'blue']?.text || 'text-blue-400'} border ${colorOptions[task.tagColor || 'blue']?.border || 'border-blue-500/30'}`}>
                 {task.tag}
             </span>
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-800">
@@ -401,6 +415,29 @@ const ProjectTracker = () => {
                                         className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
                                         placeholder="Enter tag (e.g. FrontEnd, BackEnd, Design)"
                                     />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        Tag Color *
+                                    </label>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {['blue', 'green', 'red', 'yellow', 'purple', 'orange', 'teal', 'gray', 'indigo'].map(color => (
+                                            <button
+                                                key={color}
+                                                type="button"
+                                                onClick={() => handleFormChange('tagColor', color)}
+                                                className={`w-10 h-10 rounded-lg border-2 transition ${
+                                                    formData.tagColor === color
+                                                        ? `${colorOptions[color].selectedBorder} ${colorOptions[color].selectedBg}`
+                                                        : 'border-gray-700 hover:border-gray-600'
+                                                } ${colorOptions[color].bg}`}
+                                                title={color.charAt(0).toUpperCase() + color.slice(1)}
+                                            >
+                                                <div className={`w-full h-full rounded ${colorOptions[color].solid}`}></div>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
