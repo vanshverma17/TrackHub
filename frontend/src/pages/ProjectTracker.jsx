@@ -119,6 +119,24 @@ const ProjectTracker = () => {
         setShowModal(true);
     };
 
+    const formatDateToDisplay = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
+    };
+
+    const formatDateToInput = (displayDate) => {
+        if (!displayDate) return "";
+        // Parse "Dec 27, 2025" format back to "YYYY-MM-DD"
+        const date = new Date(displayDate);
+        if (isNaN(date.getTime())) return "";
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     const handleEditTask = (task, column) => {
         setModalColumn(column);
         setEditingTask(task);
@@ -126,8 +144,8 @@ const ProjectTracker = () => {
             title: task.title,
             description: task.description || "",
             tag: task.tag,
-            startDate: task.startDate,
-            dueDate: task.dueDate
+            startDate: formatDateToInput(task.startDate),
+            dueDate: formatDateToInput(task.dueDate)
         });
         setShowModal(true);
     };
@@ -135,13 +153,19 @@ const ProjectTracker = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         
+        const formattedData = {
+            ...formData,
+            startDate: formatDateToDisplay(formData.startDate),
+            dueDate: formatDateToDisplay(formData.dueDate)
+        };
+        
         if (editingTask) {
             // Update existing task
             setTasks(prev => ({
                 ...prev,
                 [modalColumn]: prev[modalColumn].map(t =>
                     t.id === editingTask.id
-                        ? { ...t, ...formData }
+                        ? { ...t, ...formattedData }
                         : t
                 )
             }));
@@ -150,7 +174,7 @@ const ProjectTracker = () => {
             const newId = `IAT-${Date.now()}`;
             const newTask = {
                 id: newId,
-                ...formData,
+                ...formattedData,
                 assignee: null,
                 completed: modalColumn === 'done'
             };
