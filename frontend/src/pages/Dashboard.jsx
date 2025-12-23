@@ -31,7 +31,7 @@ const Dashboard = () => {
             <Sidebar />
 
             {/* Main Content */}
-            <div className="ml-64 flex flex-col h-screen overflow-hidden">
+            <div className="ml-64 mr-80 flex flex-col h-screen overflow-hidden">
                 {/* Header */}
                 <div className="p-6 border-b border-gray-800 flex items-center justify-between flex-shrink-0">
                     <div className="flex-1 max-w-md">
@@ -127,7 +127,7 @@ const Dashboard = () => {
             </div>
 
             {/* Right Sidebar */}
-            <div className="w-80 bg-gray-900/50 border-l border-gray-800 p-6 space-y-6 overflow-y-auto">
+            <div className="w-80 bg-gray-900/50 border-l border-gray-800 p-6 space-y-6 overflow-y-auto fixed right-0 top-0 h-screen">
                 {/* Daily Productivity Trend */}
                 <div>
                     <h3 className="text-lg font-semibold mb-4">Daily Productivity Trend</h3>
