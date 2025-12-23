@@ -233,8 +233,8 @@ const ProjectTracker = () => {
                 draggable={true}
                 onDragStart={(e) => handleDragStart(e, task, column)}
                 onDragEnd={handleDragEnd}
-                onDoubleClick={() => handleEditTask(task, column)}
-                className={`bg-gray-900 border border-gray-800 rounded-lg p-4 mb-3 cursor-move hover:border-cyan-500/50 transition group select-none ${
+                onClick={() => handleEditTask(task, column)}
+                className={`bg-gray-900 border border-gray-800 rounded-lg p-4 mb-3 cursor-pointer hover:border-cyan-500/50 transition group select-none ${
                     draggingTaskId === task.id ? "opacity-60 border-cyan-500/40" : ""
                 }`}
             >
