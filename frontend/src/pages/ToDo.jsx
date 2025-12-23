@@ -138,107 +138,171 @@ const ToDo = () => {
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto p-6">
-                    <div className="max-w-4xl">
-                        {/* Current Date Display */}
-                        <div className="mb-6">
-                            <h2 className="text-xl font-semibold text-gray-300">
-                                {selectedDate.toLocaleDateString('en-US', { 
-                                    weekday: 'long', 
-                                    year: 'numeric', 
-                                    month: 'long', 
-                                    day: 'numeric' 
-                                })}
-                            </h2>
-                            <p className="text-sm text-gray-500 mt-1">{tasks.filter(t => !t.completed).length} tasks remaining</p>
-                        </div>
+                    <div className="flex gap-6">
+                        {/* Main Content */}
+                        <div className="flex-1 max-w-4xl">
+                            {/* Current Date Display */}
+                            <div className="mb-6">
+                                <h2 className="text-xl font-semibold text-gray-300">
+                                    {selectedDate.toLocaleDateString('en-US', { 
+                                        weekday: 'long', 
+                                        year: 'numeric', 
+                                        month: 'long', 
+                                        day: 'numeric' 
+                                    })}
+                                </h2>
+                                <p className="text-sm text-gray-500 mt-1">{tasks.filter(t => !t.completed).length} tasks remaining</p>
+                            </div>
 
-                        {/* Add New Task */}
-                        <div className="mb-6">
-                            <div className="flex gap-3">
-                                <input
-                                    type="text"
-                                    value={newTaskText}
-                                    onChange={(e) => setNewTaskText(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && addTask()}
-                                    placeholder="Add a new task..."
-                                    className="flex-1 px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
-                                />
-                                <button
-                                    onClick={addTask}
-                                    className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition duration-200 flex items-center gap-2"
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    </svg>
-                                    Add Task
-                                </button>
+                            {/* Add New Task */}
+                            <div className="mb-6">
+                                <div className="flex gap-3">
+                                    <input
+                                        type="text"
+                                        value={newTaskText}
+                                        onChange={(e) => setNewTaskText(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && addTask()}
+                                        placeholder="Add a new task..."
+                                        className="flex-1 px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                    />
+                                    <button
+                                        onClick={addTask}
+                                        className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition duration-200 flex items-center gap-2"
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add Task
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Tasks List */}
+                            <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden">
+                                {tasks.length === 0 ? (
+                                    <div className="p-12 text-center text-gray-500">
+                                        <svg className="mx-auto mb-4 opacity-50" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                        </svg>
+                                        <p>No tasks yet. Add one to get started!</p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-800">
+                                        {tasks.map((task) => (
+                                            <div
+                                                key={task.id}
+                                                onMouseEnter={() => setHoveredTaskId(task.id)}
+                                                onMouseLeave={() => setHoveredTaskId(null)}
+                                                className="flex items-center gap-4 px-6 py-4 hover:bg-gray-800/50 transition-all duration-200 group"
+                                            >
+                                                {/* Checkbox */}
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={task.completed}
+                                                        onChange={() => toggleTask(task.id)}
+                                                        className="w-5 h-5 rounded border-2 border-gray-600 bg-transparent checked:bg-cyan-500 checked:border-cyan-500 cursor-pointer transition-all duration-200 appearance-none flex items-center justify-center"
+                                                        style={{
+                                                            backgroundImage: task.completed ? 
+                                                                `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E")` 
+                                                                : 'none',
+                                                            backgroundSize: '80%',
+                                                            backgroundPosition: 'center',
+                                                            backgroundRepeat: 'no-repeat'
+                                                        }}
+                                                    />
+                                                </label>
+
+                                                {/* Task Text */}
+                                                <span className={`flex-1 text-base transition-all duration-200 ${
+                                                    task.completed 
+                                                        ? 'text-gray-500 line-through' 
+                                                        : 'text-white'
+                                                }`}>
+                                                    {task.text}
+                                                </span>
+
+                                                {/* Delete Button - Only visible on hover */}
+                                                <button
+                                                    onClick={() => deleteTask(task.id)}
+                                                    className={`p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200 ${
+                                                        hoveredTaskId === task.id ? 'opacity-100 visible' : 'opacity-0 invisible'
+                                                    }`}
+                                                >
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* Tasks List */}
-                        <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden">
-                            {tasks.length === 0 ? (
-                                <div className="p-12 text-center text-gray-500">
-                                    <svg className="mx-auto mb-4 opacity-50" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                    </svg>
-                                    <p>No tasks yet. Add one to get started!</p>
+                        {/* Mini Calendar Widget */}
+                        <div className="flex-shrink-0 w-64">
+                            <div className="bg-gray-900/50 border border-cyan-500/30 rounded-xl p-5 sticky top-0">
+                                <h3 className="text-lg font-semibold text-white mb-4">Calendar</h3>
+                                
+                                {/* Calendar Grid */}
+                                <div className="space-y-2">
+                                    {/* Day Headers */}
+                                    <div className="grid grid-cols-7 gap-1 mb-2">
+                                        {['Sun', 'Mon', 'Tu', 'Wed', 'Th', 'Fri', 'Sat'].map(day => (
+                                            <div key={day} className="text-center text-xs text-gray-500 font-medium">
+                                                {day}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
+                                    {/* Calendar Days */}
+                                    <div className="grid grid-cols-7 gap-1">
+                                        {(() => {
+                                            const today = new Date();
+                                            const year = today.getFullYear();
+                                            const month = today.getMonth();
+                                            const firstDay = new Date(year, month, 1).getDay();
+                                            const daysInMonth = new Date(year, month + 1, 0).getDate();
+                                            const days = [];
+                                            
+                                            // Empty cells for days before month starts
+                                            for (let i = 0; i < firstDay; i++) {
+                                                days.push(<div key={`empty-${i}`} className="aspect-square"></div>);
+                                            }
+                                            
+                                            // Days of the month
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(year, month, day);
+                                                const isSelected = isSameDay(date, selectedDate);
+                                                const isTodayDate = isToday(date);
+                                                
+                                                days.push(
+                                                    <button
+                                                        key={day}
+                                                        onClick={() => setSelectedDate(date)}
+                                                        className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-all ${
+                                                            isSelected
+                                                                ? 'bg-cyan-500 text-white font-semibold'
+                                                                : isTodayDate
+                                                                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                                                                : 'text-gray-400 hover:bg-gray-800/50'
+                                                        }`}
+                                                    >
+                                                        {day}
+                                                    </button>
+                                                );
+                                            }
+                                            
+                                            return days;
+                                        })()}
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="divide-y divide-gray-800">
-                                    {tasks.map((task) => (
-                                        <div
-                                            key={task.id}
-                                            onMouseEnter={() => setHoveredTaskId(task.id)}
-                                            onMouseLeave={() => setHoveredTaskId(null)}
-                                            className="flex items-center gap-4 px-6 py-4 hover:bg-gray-800/50 transition-all duration-200 group"
-                                        >
-                                            {/* Checkbox */}
-                                            <label className="flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={task.completed}
-                                                    onChange={() => toggleTask(task.id)}
-                                                    className="w-5 h-5 rounded border-2 border-gray-600 bg-transparent checked:bg-cyan-500 checked:border-cyan-500 cursor-pointer transition-all duration-200 appearance-none flex items-center justify-center"
-                                                    style={{
-                                                        backgroundImage: task.completed ? 
-                                                            `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E")` 
-                                                            : 'none',
-                                                        backgroundSize: '80%',
-                                                        backgroundPosition: 'center',
-                                                        backgroundRepeat: 'no-repeat'
-                                                    }}
-                                                />
-                                            </label>
-
-                                            {/* Task Text */}
-                                            <span className={`flex-1 text-base transition-all duration-200 ${
-                                                task.completed 
-                                                    ? 'text-gray-500 line-through' 
-                                                    : 'text-white'
-                                            }`}>
-                                                {task.text}
-                                            </span>
-
-                                            {/* Delete Button - Only visible on hover */}
-                                            <button
-                                                onClick={() => deleteTask(task.id)}
-                                                className={`p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200 ${
-                                                    hoveredTaskId === task.id ? 'opacity-100 visible' : 'opacity-0 invisible'
-                                                }`}
-                                            >
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 </div>
