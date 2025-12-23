@@ -26,14 +26,14 @@ const Dashboard = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-black text-white flex">
+        <div className="min-h-screen bg-black text-white">
             {/* Left Sidebar */}
             <Sidebar />
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="ml-64 flex flex-col h-screen overflow-hidden">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-800 flex items-center justify-between">
+                <div className="p-6 border-b border-gray-800 flex items-center justify-between flex-shrink-0">
                     <div className="flex-1 max-w-md">
                         <div className="relative">
                             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -71,9 +71,9 @@ const ToDo = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex">
+        <div className="min-h-screen bg-black text-white">
             <Sidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="ml-64 flex flex-col h-screen">
                 {/* Header */}
                 <div className="p-6 border-b border-gray-800">
                     <h1 className="text-2xl font-semibold mb-6">TODO List</h1>

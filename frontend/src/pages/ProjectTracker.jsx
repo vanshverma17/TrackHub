@@ -288,9 +288,9 @@ const ProjectTracker = () => {
     );
 
     return (
-        <div className="min-h-screen bg-black text-white flex">
+        <div className="min-h-screen bg-black text-white">
             <Sidebar />
-            <div className="flex-1 p-6 overflow-auto">
+            <div className="ml-64 p-6 overflow-auto">
                 {/* Header */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">

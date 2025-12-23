@@ -2,7 +2,7 @@ import { NavLink, Link } from "react-router-dom";
 
 const Sidebar = () => {
     return (
-        <div className="w-64 bg-gray-900/50 border-r border-gray-800 flex flex-col">
+        <div className="w-64 bg-gray-900/50 border-r border-gray-800 flex flex-col fixed left-0 top-0 h-screen z-10">
             {/* Logo */}
             <div className="p-6 flex items-center justify-between border-b border-gray-800">
                 <h1 className="text-xl font-bold">TrackHub</h1>

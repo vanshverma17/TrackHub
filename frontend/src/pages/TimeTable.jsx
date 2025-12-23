@@ -71,9 +71,9 @@ const TimeTable = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex">
+        <div className="min-h-screen bg-black text-white">
             <Sidebar />
-            <div className="flex-1 p-6 overflow-auto">
+            <div className="ml-64 p-6 h-screen overflow-auto">
                 <div className="mb-6">
                     <h1 className="text-2xl font-semibold mb-2">TimeTable</h1>
                     <p className="text-gray-400">Manage your weekly schedule</p>
