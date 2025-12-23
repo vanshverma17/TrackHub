@@ -393,17 +393,21 @@ const ProjectTracker = () => {
                                     <label className="block text-sm font-medium text-gray-400 mb-2">
                                         Tag *
                                     </label>
-                                    <select
+                                    <input
+                                        type="text"
                                         required
                                         value={formData.tag}
                                         onChange={(e) => handleFormChange('tag', e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition"
-                                    >
-                                        <option value="FrontEnd">FrontEnd</option>
-                                        <option value="BackEnd">BackEnd</option>
-                                        <option value="Design">Design</option>
-                                        <option value="Testing">Testing</option>
-                                    </select>
+                                        list="tag-suggestions"
+                                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                        placeholder="Enter or select a tag"
+                                    />
+                                    <datalist id="tag-suggestions">
+                                        <option value="FrontEnd" />
+                                        <option value="BackEnd" />
+                                        <option value="Design" />
+                                        <option value="Testing" />
+                                    </datalist>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
