@@ -28,20 +28,9 @@ const ProjectTracker = () => {
     });
     
     const [tasks, setTasks] = useState({
-        todo: [
-            { id: "IAT-4", title: "Customer & Item forms", description: "", tag: "FrontEnd", tagColor: "blue", startDate: "Dec 20, 2025", dueDate: "Dec 27, 2025", assignee: null },
-            { id: "IAT-5", title: "Auth & Roles (Admin/Staff)", description: "", tag: "BackEnd", tagColor: "purple", startDate: "Dec 21, 2025", dueDate: "Dec 27, 2025", assignee: null },
-            { id: "IAT-6", title: "Invoice schema", description: "", tag: "BackEnd", tagColor: "purple", startDate: "Dec 22, 2025", dueDate: "Dec 27, 2025", assignee: null },
-            { id: "IAT-7", title: "Customer & item schema", description: "", tag: "BackEnd", tagColor: "purple", startDate: "Dec 23, 2025", dueDate: "Dec 27, 2025", assignee: null },
-            { id: "IAT-8", title: "CRUD APIs", description: "", tag: "BackEnd", tagColor: "purple", startDate: "Dec 24, 2025", dueDate: "Dec 27, 2025", assignee: null },
-        ],
-        inProgress: [
-            { id: "IAT-1", title: "Dashboard Layout", description: "", tag: "FrontEnd", tagColor: "blue", startDate: "Dec 15, 2025", dueDate: "Dec 27, 2025", assignee: "W" },
-            { id: "IAT-2", title: "Invoice List", description: "", tag: "FrontEnd", tagColor: "blue", startDate: "Dec 18, 2025", dueDate: "Dec 27, 2025", assignee: "W" },
-        ],
-        done: [
-            { id: "IAT-3", title: "Create Invoice UI", description: "", tag: "FrontEnd", tagColor: "blue", startDate: "Dec 10, 2025", dueDate: "Dec 27, 2025", assignee: "W", completed: true },
-        ]
+        todo: [],
+        inProgress: [],
+        done: []
     });
 
     const [draggedTask, setDraggedTask] = useState(null);
@@ -307,15 +296,7 @@ const ProjectTracker = () => {
             <div className="ml-64 p-6 overflow-auto">
                 {/* Header */}
                 <div className="mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h1 className="text-2xl font-semibold">Project Tracker</h1>
-                        <button className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition flex items-center gap-2">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            New Project
-                        </button>
-                    </div>
+                    <h1 className="text-2xl font-semibold mb-4">Project Tracker</h1>
                     
                     {/* Search and Filter Bar */}
                     <div className="flex items-center gap-3">

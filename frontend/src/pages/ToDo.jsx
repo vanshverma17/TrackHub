@@ -4,14 +4,11 @@ import Sidebar from "../components/Sidebar";
 
 const ToDo = () => {
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [tasks, setTasks] = useState([
-        { id: 1, text: "Complete project documentation", completed: false },
-        { id: 2, text: "Review pull requests", completed: true },
-        { id: 3, text: "Team meeting at 3 PM", completed: false },
-    ]);
+    const [tasks, setTasks] = useState([]);
     const [newTaskText, setNewTaskText] = useState("");
     const [hoveredTaskId, setHoveredTaskId] = useState(null);
     const dateScrollRef = useRef(null);
+    const [calendarMonth, setCalendarMonth] = useState(new Date());
 
     // Generate dates for the scrollable date picker
     const generateDates = () => {
@@ -68,6 +65,12 @@ const ToDo = () => {
             setTasks([...tasks, newTask]);
             setNewTaskText("");
         }
+    };
+
+    const changeMonth = (offset) => {
+        const newMonth = new Date(calendarMonth);
+        newMonth.setMonth(calendarMonth.getMonth() + offset);
+        setCalendarMonth(newMonth);
     };
 
     return (
@@ -247,7 +250,31 @@ const ToDo = () => {
                         {/* Mini Calendar Widget */}
                         <div className="flex-shrink-0 w-64">
                             <div className="bg-gray-900/50 border border-cyan-500/30 rounded-xl p-5 sticky top-0">
-                                <h3 className="text-lg font-semibold text-white mb-4">Calendar</h3>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-white">
+                                        {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                    </h3>
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={() => changeMonth(-1)}
+                                            className="p-1 hover:bg-gray-800 rounded transition-colors"
+                                            aria-label="Previous month"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            onClick={() => changeMonth(1)}
+                                            className="p-1 hover:bg-gray-800 rounded transition-colors"
+                                            aria-label="Next month"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
                                 
                                 {/* Calendar Grid */}
                                 <div className="space-y-2">
@@ -263,9 +290,8 @@ const ToDo = () => {
                                     {/* Calendar Days */}
                                     <div className="grid grid-cols-7 gap-1">
                                         {(() => {
-                                            const today = new Date();
-                                            const year = today.getFullYear();
-                                            const month = today.getMonth();
+                                            const year = calendarMonth.getFullYear();
+                                            const month = calendarMonth.getMonth();
                                             const firstDay = new Date(year, month, 1).getDay();
                                             const daysInMonth = new Date(year, month + 1, 0).getDate();
                                             const days = [];

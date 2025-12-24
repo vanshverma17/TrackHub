@@ -2,17 +2,7 @@ import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 
 const TimeTable = () => {
-    const [schedule, setSchedule] = useState([
-        { id: 1, time: "09:00", activity: "Morning Workout", dates: {} },
-        { id: 2, time: "10:00", activity: "Team Meeting", dates: {} },
-        { id: 3, time: "11:00", activity: "Project Work", dates: {} },
-        { id: 4, time: "12:00", activity: "Lunch Break", dates: {} },
-        { id: 5, time: "14:00", activity: "Code Review", dates: {} },
-        { id: 6, time: "15:00", activity: "Learning Time", dates: {} },
-        { id: 7, time: "16:00", activity: "Documentation", dates: {} },
-        { id: 8, time: "17:00", activity: "Exercise", dates: {} },
-        { id: 9, time: "18:00", activity: "Personal Time", dates: {} },
-    ]);
+    const [schedule, setSchedule] = useState([]);
 
     // Generate dates for the week
     const generateWeekDates = () => {
