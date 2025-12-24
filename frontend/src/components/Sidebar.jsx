@@ -12,14 +12,8 @@ const Sidebar = () => {
     return (
         <div className="w-64 bg-gray-900/50 border-r border-gray-800 flex flex-col fixed left-0 top-0 h-screen z-10">
             {/* Logo */}
-            <div className="p-6 flex items-center justify-between border-b border-gray-800">
+            <div className="p-6 border-b border-gray-800">
                 <h1 className="text-xl font-bold">TrackHub</h1>
-                <button className="text-gray-400 hover:text-white transition">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
             </div>
 
             {/* Navigation */}
