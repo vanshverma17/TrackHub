@@ -1,6 +1,14 @@
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { authAPI } from "../services/api";
 
 const Sidebar = () => {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        authAPI.logout();
+        navigate('/');
+    };
+
     return (
         <div className="w-64 bg-gray-900/50 border-r border-gray-800 flex flex-col fixed left-0 top-0 h-screen z-10">
             {/* Logo */}
@@ -89,14 +97,17 @@ const Sidebar = () => {
                         Settings
                     </NavLink>
 
-                    <Link to="/" className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition">
+                    <button 
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition w-full"
+                    >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
                             <line x1="21" y1="12" x2="9" y2="12"></line>
                         </svg>
                         Log Out
-                    </Link>
+                    </button>
                 </div>
             </nav>
         </div>

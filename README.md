@@ -79,21 +79,69 @@ TrackHub/
 
 ## ▶️ Run Locally
 
+### Prerequisites
+- Node.js (v16 or higher)
+- MongoDB (running locally on port 27017 or use MongoDB Atlas)
+- npm or yarn
+
+### Backend Setup
+
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/TrackHub.git
+# Navigate to backend directory
+cd backend
 
-# Start backend
-cd server
+# Install dependencies
 npm install
+
+# Make sure MongoDB is running
+# The app expects MongoDB at: mongodb://localhost:27017/trackhub
+
+# Start the backend server
 npm run dev
+# Backend will run on http://localhost:5000
+```
 
-# Start frontend
-cd client
+### Frontend Setup
+
+```bash
+# Navigate to frontend directory (in a new terminal)
+cd frontend
+
+# Install dependencies
 npm install
-npm start
 
-🎯 Project Goal
+# Start the frontend development server
+npm run dev
+# Frontend will run on http://localhost:5173
+```
+
+### Environment Variables
+
+**Backend (.env)**
+```
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/trackhub
+JWT_SECRET=my-super-secret-jwt-key-2024-trackhub-app-xyz123
+NODE_ENV=development
+```
+
+**Frontend (.env)**
+```
+VITE_API_URL=http://localhost:5000/api
+```
+
+### Testing the Connection
+
+1. Start MongoDB service
+2. Start the backend server (it should connect to MongoDB)
+3. Start the frontend server
+4. Navigate to http://localhost:5173
+5. Try signing up with a new account
+6. The registration should succeed and redirect you to the dashboard
+
+---
+
+## 🎯 Project Goal
 
 Practice and master the MERN stack
 

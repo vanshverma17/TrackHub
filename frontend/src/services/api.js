@@ -1,0 +1,93 @@
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true,
+});
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized access
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth API
+export const authAPI = {
+  login: (credentials) => api.post('/auth/login', credentials),
+  register: (userData) => api.post('/auth/register', userData),
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  },
+};
+
+// Dashboard API
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+};
+
+// Projects API
+export const projectsAPI = {
+  getAll: () => api.get('/projects'),
+  getById: (id) => api.get(`/projects/${id}`),
+  create: (projectData) => api.post('/projects', projectData),
+  update: (id, projectData) => api.put(`/projects/${id}`, projectData),
+  delete: (id) => api.delete(`/projects/${id}`),
+};
+
+// Tasks API
+export const tasksAPI = {
+  getAll: () => api.get('/tasks'),
+  getById: (id) => api.get(`/tasks/${id}`),
+  getByProject: (projectId) => api.get(`/tasks/project/${projectId}`),
+  create: (taskData) => api.post('/tasks', taskData),
+  update: (id, taskData) => api.put(`/tasks/${id}`, taskData),
+  delete: (id) => api.delete(`/tasks/${id}`),
+};
+
+// Todos API
+export const todosAPI = {
+  getAll: () => api.get('/todos'),
+  getById: (id) => api.get(`/todos/${id}`),
+  create: (todoData) => api.post('/todos', todoData),
+  update: (id, todoData) => api.put(`/todos/${id}`, todoData),
+  delete: (id) => api.delete(`/todos/${id}`),
+};
+
+// Time Entries API
+export const timeEntriesAPI = {
+  getAll: () => api.get('/time-entries'),
+  getById: (id) => api.get(`/time-entries/${id}`),
+  create: (entryData) => api.post('/time-entries', entryData),
+  update: (id, entryData) => api.put(`/time-entries/${id}`, entryData),
+  delete: (id) => api.delete(`/time-entries/${id}`),
+};
+
+export default api;

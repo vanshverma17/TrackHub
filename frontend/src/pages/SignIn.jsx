@@ -1,7 +1,46 @@
-
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { authAPI } from "../services/api";
 
 const SignIn = () => {
+    const [formData, setFormData] = useState({
+        email: "",
+        password: ""
+    });
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+        setError("");
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+
+        try {
+            const response = await authAPI.login(formData);
+            const { token, user } = response.data;
+            
+            // Store token and user data
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            // Redirect to dashboard
+            navigate('/dashboard');
+        } catch (err) {
+            setError(err.response?.data?.error || "Login failed. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-black text-white flex">
             {/* Left Side - Dashboard Graphics */}
@@ -109,13 +148,24 @@ const SignIn = () => {
                             </p>
                         </div>
 
+                        {/* Error Message */}
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                                {error}
+                            </div>
+                        )}
+
                         {/* Form */}
-                        <form className="space-y-5">
+                        <form onSubmit={handleSubmit} className="space-y-5">
                             {/* Email/Username Input */}
                             <div>
                                 <input
                                     type="text"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
                                     placeholder="Email / Username / Phone Number"
+                                    required
                                     className="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
                                 />
                             </div>
@@ -124,23 +174,25 @@ const SignIn = () => {
                             <div>
                                 <input
                                     type="password"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
                                     placeholder="Password"
+                                    required
                                     className="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
                                 />
                             </div>
 
                             {/* Sign In Button */}
                             <div>
-                                <Link className="pt-3" to='/dashboard'>
-                            <button
-                                type="submit"
-                                className="w-full py-3 bg-transparent border-2 border-cyan-500 text-cyan-500 rounded-lg font-semibold hover:bg-cyan-500 hover:text-white transition duration-300"
-                            >
-                                Sign In
-                            </button>
-                            </Link>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-3 bg-transparent border-2 border-cyan-500 text-cyan-500 rounded-lg font-semibold hover:bg-cyan-500 hover:text-white transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? "Signing In..." : "Sign In"}
+                                </button>
                             </div>
-                            
                         </form>
 
                         {/* Footer Links */}
