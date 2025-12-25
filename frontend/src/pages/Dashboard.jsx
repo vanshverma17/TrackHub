@@ -1,13 +1,45 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 
 const Dashboard = () => {
     const [searchQuery, setSearchQuery] = useState("");
+    const [greeting, setGreeting] = useState("");
+    const [userName, setUserName] = useState("");
 
-    const habitCards = [
-        { id: 1, label: "Repetitive", title: "Workout Routine", progress: 60 },
-        { id: 2, label: "Repetitive", title: "Workout Routine", progress: 45 },
-        { id: 3, label: "Remedies", title: "Read 30 pages", progress: 80 }
+    useEffect(() => {
+        // Get user name from localStorage
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        setUserName(user.name || 'User');
+
+        // Set greeting based on time
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 12) {
+            setGreeting('Good Morning');
+        } else if (hour >= 12 && hour < 17) {
+            setGreeting('Good Afternoon');
+        } else if (hour >= 17 && hour < 21) {
+            setGreeting('Good Evening');
+        } else {
+            setGreeting('Good Night');
+        }
+    }, []);
+
+    const stats = [
+        { 
+            id: 1, 
+            label: "Tasks completed today", 
+            value: "7/12"
+        },
+        { 
+            id: 2, 
+            label: "Hours tracked this week", 
+            value: "25.5h"
+        },
+        { 
+            id: 3, 
+            label: "Weekly task goal", 
+            value: "40 tasks"
+        }
     ];
 
     const activities = [
@@ -63,29 +95,24 @@ const Dashboard = () => {
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                    {/* See Calendar Section */}
-                    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
-                        <h2 className="text-xl font-semibold mb-6">See Calendar</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {habitCards.map((habit) => (
-                                <div key={habit.id} className="bg-gray-800/50 border border-cyan-500/30 rounded-xl p-4 hover:border-cyan-500/50 transition">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div>
-                                            <p className="text-xs text-gray-400 mb-1">{habit.label}</p>
-                                            <h3 className="text-sm font-semibold">{habit.title}</h3>
-                                        </div>
-                                        <div className="w-8 h-8 rounded-full border-2 border-cyan-400 flex items-center justify-center">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                                        <div className="h-full bg-gradient-to-r from-fuchsia-500 to-pink-500" style={{ width: `${habit.progress}%` }}></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                    {/* Greeting */}
+                    <div className="mb-4">
+                        <h1 className="text-3xl font-bold text-white">
+                            {greeting}, <span className="text-cyan-400">{userName}</span>
+                        </h1>
+                    </div>
+
+                    {/* Stats Cards Section */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        {stats.map((stat) => (
+                            <div 
+                                key={stat.id} 
+                                className="border border-white rounded-2xl p-6 text-center"
+                            >
+                                <p className="text-sm text-gray-300 mb-2">{stat.label}</p>
+                                <p className="text-4xl font-bold text-white">{stat.value}</p>
+                            </div>
+                        ))}
                     </div>
 
                     {/* My Activities Section */}
