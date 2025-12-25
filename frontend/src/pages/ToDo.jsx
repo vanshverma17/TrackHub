@@ -1,6 +1,7 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
+import { todosAPI } from "../services/api";
 
 const ToDo = () => {
     const [selectedDate, setSelectedDate] = useState(new Date());
@@ -9,6 +10,24 @@ const ToDo = () => {
     const [hoveredTaskId, setHoveredTaskId] = useState(null);
     const dateScrollRef = useRef(null);
     const [calendarMonth, setCalendarMonth] = useState(new Date());
+    const [loading, setLoading] = useState(false);
+
+    // Fetch tasks on component mount
+    useEffect(() => {
+        fetchTasks();
+    }, []);
+
+    const fetchTasks = async () => {
+        setLoading(true);
+        try {
+            const response = await todosAPI.getAll();
+            setTasks(response.data);
+        } catch (error) {
+            console.error('Error fetching tasks:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Generate dates for the scrollable date picker
     const generateDates = () => {
@@ -45,25 +64,40 @@ const ToDo = () => {
         }
     };
 
-    const toggleTask = (id) => {
-        setTasks(tasks.map(task =>
-            task.id === id ? { ...task, completed: !task.completed } : task
-        ));
+    const toggleTask = async (id) => {
+        try {
+            const task = tasks.find(t => t._id === id);
+            const response = await todosAPI.update(id, {
+                completed: !task.completed
+            });
+            setTasks(tasks.map(t => t._id === id ? response.data : t));
+        } catch (error) {
+            console.error('Error toggling task:', error);
+        }
     };
 
-    const deleteTask = (id) => {
-        setTasks(tasks.filter(task => task.id !== id));
+    const deleteTask = async (id) => {
+        try {
+            await todosAPI.delete(id);
+            setTasks(tasks.filter(task => task._id !== id));
+        } catch (error) {
+            console.error('Error deleting task:', error);
+        }
     };
 
-    const addTask = () => {
+    const addTask = async () => {
         if (newTaskText.trim()) {
-            const newTask = {
-                id: Date.now(),
-                text: newTaskText,
-                completed: false
-            };
-            setTasks([...tasks, newTask]);
-            setNewTaskText("");
+            try {
+                const response = await todosAPI.create({
+                    text: newTaskText,
+                    date: selectedDate.toISOString(),
+                    completed: false
+                });
+                setTasks([...tasks, response.data]);
+                setNewTaskText("");
+            } catch (error) {
+                console.error('Error adding task:', error);
+            }
         }
     };
 
@@ -183,7 +217,12 @@ const ToDo = () => {
 
                             {/* Tasks List */}
                             <div className="bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden">
-                                {tasks.length === 0 ? (
+                                {loading ? (
+                                    <div className="p-12 text-center text-gray-500">
+                                        <div className="animate-spin mx-auto mb-4 h-12 w-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full"></div>
+                                        <p>Loading tasks...</p>
+                                    </div>
+                                ) : tasks.length === 0 ? (
                                     <div className="p-12 text-center text-gray-500">
                                         <svg className="mx-auto mb-4 opacity-50" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -194,8 +233,8 @@ const ToDo = () => {
                                     <div className="divide-y divide-gray-800">
                                         {tasks.map((task) => (
                                             <div
-                                                key={task.id}
-                                                onMouseEnter={() => setHoveredTaskId(task.id)}
+                                                key={task._id}
+                                                onMouseEnter={() => setHoveredTaskId(task._id)}
                                                 onMouseLeave={() => setHoveredTaskId(null)}
                                                 className="flex items-center gap-4 px-6 py-4 hover:bg-gray-800/50 transition-all duration-200 group"
                                             >
@@ -204,7 +243,7 @@ const ToDo = () => {
                                                     <input
                                                         type="checkbox"
                                                         checked={task.completed}
-                                                        onChange={() => toggleTask(task.id)}
+                                                        onChange={() => toggleTask(task._id)}
                                                         className="w-5 h-5 rounded border-2 border-gray-600 bg-transparent checked:bg-cyan-500 checked:border-cyan-500 cursor-pointer transition-all duration-200 appearance-none flex items-center justify-center"
                                                         style={{
                                                             backgroundImage: task.completed ? 
@@ -228,9 +267,9 @@ const ToDo = () => {
 
                                                 {/* Delete Button - Only visible on hover */}
                                                 <button
-                                                    onClick={() => deleteTask(task.id)}
+                                                    onClick={() => deleteTask(task._id)}
                                                     className={`p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200 ${
-                                                        hoveredTaskId === task.id ? 'opacity-100 visible' : 'opacity-0 invisible'
+                                                        hoveredTaskId === task._id ? 'opacity-100 visible' : 'opacity-0 invisible'
                                                     }`}
                                                 >
                                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

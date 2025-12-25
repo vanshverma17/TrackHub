@@ -1,5 +1,5 @@
 import './index.css'
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from './pages/Dashboard'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp';
@@ -9,12 +9,17 @@ import ToDo from './pages/ToDo';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function AppWrapper() {
+  const isAuthenticated = !!localStorage.getItem('token');
+
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow">
         <Routes>
-          <Route path='/' element={<SignIn/>} />
-          <Route path='/signup' element={<SignUp/>} />
+          {/* Public Routes - Redirect to dashboard if already logged in */}
+          <Route path='/' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn/>} />
+          <Route path='/signup' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp/>} />
+          
+          {/* Protected Routes */}
           <Route path='/dashboard' element={
             <ProtectedRoute>
               <Dashboard/>
@@ -35,6 +40,9 @@ function AppWrapper() {
               <ToDo/>
             </ProtectedRoute>
           } />
+          
+          {/* Catch all - redirect to signin */}
+          <Route path='*' element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>

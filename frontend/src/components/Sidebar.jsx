@@ -6,7 +6,7 @@ const Sidebar = () => {
 
     const handleLogout = () => {
         authAPI.logout();
-        navigate('/');
+        navigate('/', { replace: true });
     };
 
     return (
