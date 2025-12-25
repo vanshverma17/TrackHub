@@ -42,12 +42,15 @@ const Dashboard = () => {
         }
     ];
 
-    const activities = [
-        { title: "Finish UI design", category: "Task", progress1: "75%", progress2: "75%", dueDate: "Tomorrow", barWidth: 75 },
-        { title: "Meditate 10 min", category: "Habit", progress1: "75%", progress2: "30%", dueDate: "Today", barWidth: 75 },
-        { title: "Meditate 10 min", category: "30%", progress1: "100%", progress2: "30%", dueDate: "Weekly", barWidth: 100 },
-        { title: "Learn Spanish", category: "30%", progress1: "30%", progress2: "30%", dueDate: "Weekly", barWidth: 45 },
-        { title: "Prepare presentation", category: "50%", progress1: "50%", progress2: "50%", dueDate: "Friday", barWidth: 50 }
+    const todaysFocus = [
+        { id: 1, text: "Finalize Project Proposal", time: "9am-11:24", completed: false },
+        { id: 2, text: "Client Meeting", time: "", completed: false },
+        { id: 3, text: "Deep Work: Code Feature X", time: "2pm-4pm", completed: false }
+    ];
+
+    const habitStreaks = [
+        { id: 1, name: "Morning Yoga", days: 5, progress: 36, color: "cyan" },
+        { id: 2, name: "Meditate", days: 13, progress: 76, color: "orange" }
     ];
 
     const reminders = [
@@ -115,39 +118,61 @@ const Dashboard = () => {
                         ))}
                     </div>
 
-                    {/* My Activities Section */}
+                    {/* Today's Focus Section */}
                     <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
-                        <h2 className="text-xl font-semibold mb-6">My Activities</h2>
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b border-gray-800">
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Activity title</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Category</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Progress %</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Progress %</th>
-                                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">Due date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {activities.map((activity, index) => (
-                                        <tr key={index} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition">
-                                            <td className="py-4 px-4 text-sm">{activity.title}</td>
-                                            <td className="py-4 px-4 text-sm text-gray-400">{activity.category}</td>
-                                            <td className="py-4 px-4 text-sm">{activity.progress1}</td>
-                                            <td className="py-4 px-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm text-gray-400">{activity.progress2}</span>
-                                                    <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden max-w-[120px]">
-                                                        <div className="h-full bg-gradient-to-r from-cyan-500 to-fuchsia-500" style={{ width: `${activity.barWidth}%` }}></div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4 text-sm text-right text-gray-400">{activity.dueDate}</td>
-                                        </tr>
+                        <div className="flex items-start justify-between gap-8">
+                            {/* Today's Focus List */}
+                            <div className="flex-1">
+                                <h2 className="text-xl font-semibold mb-6">Today's Focus</h2>
+                                <div className="space-y-4">
+                                    {todaysFocus.map((task) => (
+                                        <div key={task.id} className="flex items-start gap-3">
+                                            <div className="w-5 h-5 rounded-full bg-cyan-500/30 border-2 border-cyan-500 flex-shrink-0 mt-0.5"></div>
+                                            <div>
+                                                <p className="text-white font-medium">{task.text}</p>
+                                                {task.time && (
+                                                    <p className="text-sm text-gray-400 mt-1">({task.time})</p>
+                                                )}
+                                            </div>
+                                        </div>
                                     ))}
-                                </tbody>
-                            </table>
+                                </div>
+                            </div>
+
+                            {/* Habit Streaks */}
+                            <div className="w-64">
+                                <h3 className="text-xl font-semibold mb-6">Habit Streaks</h3>
+                                <div className="flex gap-6">
+                                    {habitStreaks.map((habit) => (
+                                        <div key={habit.id} className="text-center">
+                                            <div className="relative w-24 h-24 mb-2">
+                                                <svg className="transform -rotate-90" viewBox="0 0 100 100">
+                                                    <circle
+                                                        cx="50"
+                                                        cy="50"
+                                                        r="40"
+                                                        fill="none"
+                                                        stroke="#374151"
+                                                        strokeWidth="8"
+                                                    />
+                                                    <circle
+                                                        cx="50"
+                                                        cy="50"
+                                                        r="40"
+                                                        fill="none"
+                                                        stroke={habit.color === 'cyan' ? '#06b6d4' : '#fb923c'}
+                                                        strokeWidth="8"
+                                                        strokeDasharray={`${habit.progress * 2.51} 251`}
+                                                        strokeLinecap="round"
+                                                    />
+                                                </svg>
+                                            </div>
+                                            <p className="text-sm text-white font-medium">{habit.name}</p>
+                                            <p className="text-xs text-gray-400">({habit.days} days)</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -193,18 +218,38 @@ const Dashboard = () => {
                             ))}
                         </div>
                         <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                            {[...Array(35)].map((_, i) => {
-                                const day = i - 3;
-                                const isToday = day === 15;
-                                if (day < 1 || day > 31) {
-                                    return <div key={i} className="py-1"></div>;
+                            {(() => {
+                                const today = new Date();
+                                const currentDay = today.getDate();
+                                const currentMonth = today.getMonth();
+                                const currentYear = today.getFullYear();
+                                
+                                // Get first day of month and total days in month
+                                const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+                                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                
+                                const calendar = [];
+                                
+                                // Empty cells before month starts
+                                for (let i = 0; i < firstDayOfMonth; i++) {
+                                    calendar.push(<div key={`empty-${i}`} className="py-1"></div>);
                                 }
-                                return (
-                                    <div key={i} className={`py-1 rounded ${isToday ? 'bg-cyan-500 text-white font-semibold' : 'text-gray-400 hover:bg-gray-700'}`}>
-                                        {day}
-                                    </div>
-                                );
-                            })}
+                                
+                                // Days of the month
+                                for (let day = 1; day <= daysInMonth; day++) {
+                                    const isToday = day === currentDay;
+                                    calendar.push(
+                                        <div 
+                                            key={day} 
+                                            className={`py-1 rounded ${isToday ? 'bg-cyan-500 text-white font-semibold' : 'text-gray-400 hover:bg-gray-700'}`}
+                                        >
+                                            {day}
+                                        </div>
+                                    );
+                                }
+                                
+                                return calendar;
+                            })()}
                         </div>
                     </div>
                 </div>
