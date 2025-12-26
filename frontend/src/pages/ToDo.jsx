@@ -57,6 +57,13 @@ const ToDo = () => {
         return date1.toDateString() === date2.toDateString();
     };
 
+    const visibleTasks = tasks.filter((task) => {
+        if (!task?.dueDate) return true;
+        const due = new Date(task.dueDate);
+        if (Number.isNaN(due.getTime())) return true;
+        return isSameDay(due, selectedDate);
+    });
+
     const scrollDates = (direction) => {
         if (dateScrollRef.current) {
             const scrollAmount = direction === 'left' ? -200 : 200;
@@ -89,14 +96,15 @@ const ToDo = () => {
         if (newTaskText.trim()) {
             try {
                 const response = await todosAPI.create({
-                    text: newTaskText,
-                    date: selectedDate.toISOString(),
+                    title: newTaskText,
+                    dueDate: selectedDate.toISOString(),
                     completed: false
                 });
                 setTasks([...tasks, response.data]);
                 setNewTaskText("");
             } catch (error) {
                 console.error('Error adding task:', error);
+                console.error('Add task response:', error?.response?.data);
             }
         }
     };
@@ -188,7 +196,7 @@ const ToDo = () => {
                                         day: 'numeric' 
                                     })}
                                 </h2>
-                                <p className="text-sm text-gray-500 mt-1">{tasks.filter(t => !t.completed).length} tasks remaining</p>
+                                <p className="text-sm text-gray-500 mt-1">{visibleTasks.filter(t => !t.completed).length} tasks remaining</p>
                             </div>
 
                             {/* Add New Task */}
@@ -222,7 +230,7 @@ const ToDo = () => {
                                         <div className="animate-spin mx-auto mb-4 h-12 w-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full"></div>
                                         <p>Loading tasks...</p>
                                     </div>
-                                ) : tasks.length === 0 ? (
+                                ) : visibleTasks.length === 0 ? (
                                     <div className="p-12 text-center text-gray-500">
                                         <svg className="mx-auto mb-4 opacity-50" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -231,7 +239,7 @@ const ToDo = () => {
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-gray-800">
-                                        {tasks.map((task) => (
+                                        {visibleTasks.map((task) => (
                                             <div
                                                 key={task._id}
                                                 onMouseEnter={() => setHoveredTaskId(task._id)}
@@ -262,7 +270,7 @@ const ToDo = () => {
                                                         ? 'text-gray-500 line-through' 
                                                         : 'text-white'
                                                 }`}>
-                                                    {task.text}
+                                                    {task.title ?? task.text}
                                                 </span>
 
                                                 {/* Delete Button - Only visible on hover */}

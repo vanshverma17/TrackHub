@@ -14,7 +14,6 @@ const TodoSchema = new mongoose.Schema({
 
 TodoSchema.pre("save", function(next) {
   this.updatedAt = Date.now();
-  next();
 });
 
 export default mongoose.model("Todo", TodoSchema);
