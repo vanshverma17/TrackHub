@@ -11,10 +11,15 @@ import timetableRoutes from "./routes/timetable.js";
 const app = express();
 
 // Middleware
-app.use(cors({ 
-  origin: ["http://localhost:3000", "http://localhost:5173"], 
-  credentials: true 
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://your-frontend-domain.vercel.app" // Add your deployed frontend URL
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
