@@ -10,16 +10,30 @@ import timetableRoutes from "./routes/timetable.js";
 
 const app = express();
 
-// Middleware
+// Middleware - CORS MUST come before routes
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://track-hub-dun.vercel.app"  // No trailing slash
-    ],
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "http://localhost:5173",
+        "https://track-hub-dun.vercel.app"
+      ];
+      
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
