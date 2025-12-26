@@ -15,7 +15,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://track-hub-dun.vercel.app/" // Add your deployed frontend URL
+      "https://track-hub-dun.vercel.app"  // No trailing slash
     ],
     credentials: true,
   })
