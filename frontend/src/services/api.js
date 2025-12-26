@@ -64,11 +64,13 @@ export const projectsAPI = {
 
 // Tasks API
 export const tasksAPI = {
-  getAll: () => api.get('/tasks'),
+  getAll: (params) => api.get('/tasks', params ? { params } : undefined),
   getById: (id) => api.get(`/tasks/${id}`),
-  getByProject: (projectId) => api.get(`/tasks/project/${projectId}`),
+  // Prefer getAll({ project: projectId }) since backend supports query params
+  getByProject: (projectId) => api.get('/tasks', { params: { project: projectId } }),
   create: (taskData) => api.post('/tasks', taskData),
   update: (id, taskData) => api.put(`/tasks/${id}`, taskData),
+  move: (id, status) => api.patch(`/tasks/${id}/move`, { status }),
   delete: (id) => api.delete(`/tasks/${id}`),
 };
 
@@ -88,6 +90,14 @@ export const timeEntriesAPI = {
   create: (entryData) => api.post('/time-entries', entryData),
   update: (id, entryData) => api.put(`/time-entries/${id}`, entryData),
   delete: (id) => api.delete(`/time-entries/${id}`),
+};
+
+// Timetable API
+export const timetableAPI = {
+  getWeek: (weekStart) => api.get('/timetable', { params: { weekStart } }),
+  createRow: (row) => api.post('/timetable', row),
+  updateRow: (id, patch) => api.put(`/timetable/${id}`, patch),
+  deleteRow: (id) => api.delete(`/timetable/${id}`),
 };
 
 export default api;

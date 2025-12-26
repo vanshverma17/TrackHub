@@ -28,7 +28,6 @@ const TaskSchema = new mongoose.Schema({
 TaskSchema.pre("save", function(next) {
   this.updatedAt = Date.now();
   if (this.status === "done") this.completed = true;
-  next();
 });
 
 export default mongoose.model("Task", TaskSchema);

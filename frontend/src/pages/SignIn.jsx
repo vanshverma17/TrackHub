@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authAPI } from "../services/api";
+import logo from "../assets/logotrack.png";
 
 const SignIn = () => {
     const [formData, setFormData] = useState({
@@ -48,8 +49,11 @@ const SignIn = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 via-transparent to-transparent"></div>
                 
                 {/* TrackHub Text - Fixed at Bottom */}
-                <div className="absolute bottom-8 left-8 text-gray-400 text-xl">
-                    <span className="text-2xl  font-bold text-white">TrackHub</span> - Track. Build. Improve.
+                <div className="absolute bottom-8 left-8 text-gray-400 text-xl flex items-center gap-3">
+                    <img src={logo} alt="TrackHub Logo" className="w-10 h-10" />
+                    <div>
+                        <span className="text-2xl  font-bold text-white">TrackHub</span> - Track. Build. Improve.
+                    </div>
                 </div>
                 
                 <div className="relative z-10 w-full max-w-2xl">
@@ -142,7 +146,9 @@ const SignIn = () => {
                     <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-2xl p-8 shadow-2xl">
                         {/* Header */}
                         <div className="mb-8 text-center">
-                            <h1 className="text-3xl font-bold mb-2">Welcome Back!</h1>
+                            <div className="flex items-center justify-center gap-3 mb-4">
+                                <h1 className="text-3xl font-bold">Welcome Back!</h1>
+                            </div>
                             <p className="text-gray-400 text-sm">
                                 Enter your username/email/phone and password
                             </p>

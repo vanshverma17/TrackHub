@@ -61,14 +61,14 @@ const Dashboard = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
             {/* Left Sidebar */}
             <Sidebar />
 
             {/* Main Content */}
             <div className="ml-64 mr-80 flex flex-col h-screen overflow-hidden">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-800 flex items-center justify-between flex-shrink-0">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between flex-shrink-0">
                     <div className="flex-1 max-w-md">
                         <div className="relative">
                             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -80,7 +80,7 @@ const Dashboard = () => {
                                 placeholder="Search habits, or analytics..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
                             />
                         </div>
                     </div>
@@ -100,7 +100,7 @@ const Dashboard = () => {
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     {/* Greeting */}
                     <div className="mb-4">
-                        <h1 className="text-3xl font-bold text-white">
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                             {greeting}, <span className="text-cyan-400">{userName}</span>
                         </h1>
                     </div>
@@ -110,28 +110,28 @@ const Dashboard = () => {
                         {stats.map((stat) => (
                             <div 
                                 key={stat.id} 
-                                className="border border-white rounded-2xl p-6 text-center"
+                                className="border border-gray-200 dark:border-white/20 rounded-2xl p-6 text-center"
                             >
-                                <p className="text-sm text-gray-300 mb-2">{stat.label}</p>
-                                <p className="text-4xl font-bold text-white">{stat.value}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{stat.label}</p>
+                                <p className="text-4xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                             </div>
                         ))}
                     </div>
 
                     {/* Today's Focus Section */}
-                    <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6">
+                    <div className="bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
                         <div className="flex items-start justify-between gap-8">
                             {/* Today's Focus List */}
                             <div className="flex-1">
-                                <h2 className="text-xl font-semibold mb-6">Today's Focus</h2>
+                                <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Today's Focus</h2>
                                 <div className="space-y-4">
                                     {todaysFocus.map((task) => (
                                         <div key={task.id} className="flex items-start gap-3">
                                             <div className="w-5 h-5 rounded-full bg-cyan-500/30 border-2 border-cyan-500 flex-shrink-0 mt-0.5"></div>
                                             <div>
-                                                <p className="text-white font-medium">{task.text}</p>
+                                                <p className="text-gray-900 dark:text-white font-medium">{task.text}</p>
                                                 {task.time && (
-                                                    <p className="text-sm text-gray-400 mt-1">({task.time})</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">({task.time})</p>
                                                 )}
                                             </div>
                                         </div>
@@ -141,7 +141,7 @@ const Dashboard = () => {
 
                             {/* Habit Streaks */}
                             <div className="w-64">
-                                <h3 className="text-xl font-semibold mb-6">Habit Streaks</h3>
+                                <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">Habit Streaks</h3>
                                 <div className="flex gap-6">
                                     {habitStreaks.map((habit) => (
                                         <div key={habit.id} className="text-center">
@@ -179,11 +179,11 @@ const Dashboard = () => {
             </div>
 
             {/* Right Sidebar */}
-            <div className="w-80 bg-gray-900/50 border-l border-gray-800 p-6 space-y-6 overflow-y-auto fixed right-0 top-0 h-screen">
+            <div className="w-80 bg-gray-100/70 dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-800 p-6 space-y-6 overflow-y-auto fixed right-0 top-0 h-screen">
                 {/* Daily Productivity Trend */}
                 <div>
-                    <h3 className="text-lg font-semibold mb-4">Daily Productivity Trend</h3>
-                    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Daily Productivity Trend</h3>
+                    <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
                         <svg viewBox="0 0 300 150" className="w-full">
                             <defs>
                                 <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -197,7 +197,7 @@ const Dashboard = () => {
                                 <circle key={i} cx={x} cy={140 - i * 13} r="3" fill="#06b6d4"/>
                             ))}
                         </svg>
-                        <div className="flex justify-between text-xs text-gray-500 mt-2">
+                        <div className="flex justify-between text-xs text-gray-600 dark:text-gray-500 mt-2">
                             <span>Mon</span>
                             <span>Tue</span>
                             <span>Wed</span>
@@ -211,10 +211,10 @@ const Dashboard = () => {
 
                 {/* Mini Calendar */}
                 <div>
-                    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                    <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
                         <div className="grid grid-cols-7 gap-1 text-center text-xs mb-2">
                             {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-                                <div key={day} className="text-gray-500 font-medium">{day}</div>
+                                <div key={day} className="text-gray-600 dark:text-gray-500 font-medium">{day}</div>
                             ))}
                         </div>
                         <div className="grid grid-cols-7 gap-1 text-center text-xs">
@@ -241,7 +241,7 @@ const Dashboard = () => {
                                     calendar.push(
                                         <div 
                                             key={day} 
-                                            className={`py-1 rounded ${isToday ? 'bg-cyan-500 text-white font-semibold' : 'text-gray-400 hover:bg-gray-700'}`}
+                                            className={`py-1 rounded ${isToday ? 'bg-cyan-500 text-white font-semibold' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                                         >
                                             {day}
                                         </div>
@@ -257,10 +257,10 @@ const Dashboard = () => {
                 {/* Reminders */}
                 <div className="space-y-3">
                     {reminders.map((reminder, index) => (
-                        <div key={index} className={`px-4 py-3 rounded-lg border ${reminder.color === 'cyan' ? 'border-cyan-500/50 bg-cyan-500/10' : 'border-gray-700 bg-gray-800/50'}`}>
+                        <div key={index} className={`px-4 py-3 rounded-lg border ${reminder.color === 'cyan' ? 'border-cyan-500/50 bg-cyan-500/10' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50'}`}>
                             <p className="text-sm">
                                 <span className={reminder.color === 'cyan' ? 'text-cyan-400' : 'text-gray-400'}>{reminder.type}: </span>
-                                <span className={reminder.color === 'cyan' ? 'text-cyan-300' : 'text-gray-300'}>{reminder.text}</span>
+                                <span className={reminder.color === 'cyan' ? 'text-cyan-300' : 'text-gray-700 dark:text-gray-300'}>{reminder.text}</span>
                             </p>
                         </div>
                     ))}

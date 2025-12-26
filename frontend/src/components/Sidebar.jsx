@@ -1,8 +1,10 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { authAPI } from "../services/api";
+import logo from "../assets/logotrack.png";
 
 const Sidebar = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = () => {
         authAPI.logout();
@@ -10,10 +12,13 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="w-64 bg-gray-900/50 border-r border-gray-800 flex flex-col fixed left-0 top-0 h-screen z-10">
+        <div className="w-64 bg-white/90 dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-800 flex flex-col fixed left-0 top-0 h-screen z-10">
             {/* Logo */}
-            <div className="p-6 border-b border-gray-800">
-                <h1 className="text-xl font-bold">TrackHub</h1>
+            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-3">
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">TrackHub</h1>
+                    <img src={logo} alt="TrackHub Logo" className="w-12 h-12 ml-14" />
+                </div>
             </div>
 
             {/* Navigation */}
@@ -22,7 +27,7 @@ const Sidebar = () => {
                     <NavLink
                         to="/dashboard"
                         className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-400 hover:text-white hover:bg-gray-800/50'}`
+                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
                         }
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -37,7 +42,7 @@ const Sidebar = () => {
                     <NavLink
                         to="/todo"
                         className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-400 hover:text-white hover:bg-gray-800/50'}`
+                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
                         }
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -49,7 +54,7 @@ const Sidebar = () => {
                     <NavLink
                         to="/project-tracker"
                         className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-400 hover:text-white hover:bg-gray-800/50'}`
+                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
                         }
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -62,7 +67,7 @@ const Sidebar = () => {
                     <NavLink
                         to="/timetable"
                         className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-400 hover:text-white hover:bg-gray-800/50'}`
+                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
                         }
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -79,8 +84,9 @@ const Sidebar = () => {
                 <div className="mt-auto space-y-2">
                     <NavLink
                         to="/settings"
+                        state={{ backgroundLocation: location }}
                         className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-400 hover:text-white hover:bg-gray-800/50'}`
+                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
                         }
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -93,7 +99,7 @@ const Sidebar = () => {
 
                     <button 
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-4 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition w-full"
+                        className="flex items-center gap-3 px-4 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50 rounded-lg transition w-full"
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>

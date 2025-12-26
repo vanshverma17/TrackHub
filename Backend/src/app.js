@@ -6,6 +6,7 @@ import tasksRoutes from "./routes/tasks.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import todosRoutes from "./routes/todos.js";
 import timeEntriesRoutes from "./routes/timeEntries.js";
+import timetableRoutes from "./routes/timetable.js";
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/tasks", tasksRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/todos", todosRoutes);
 app.use("/api/time-entries", timeEntriesRoutes);
+app.use("/api/timetable", timetableRoutes);
 
 // Health check
 app.get("/", (req, res) => {

@@ -1,8 +1,26 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import { timetableAPI } from "../services/api";
 
 const TimeTable = () => {
     const [schedule, setSchedule] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const saveTimersRef = useRef(new Map());
+
+    const normalizeDates = (dates) => {
+        if (!dates) return {};
+        if (dates instanceof Map) return Object.fromEntries(dates.entries());
+        if (Array.isArray(dates)) {
+            try {
+                return Object.fromEntries(dates);
+            } catch {
+                return {};
+            }
+        }
+        if (typeof dates === 'object') return dates;
+        return {};
+    };
 
     // Generate dates for the week
     const generateWeekDates = () => {
@@ -11,6 +29,7 @@ const TimeTable = () => {
         const currentDay = today.getDay();
         const monday = new Date(today);
         monday.setDate(today.getDate() - currentDay + (currentDay === 0 ? -6 : 1));
+        monday.setHours(0, 0, 0, 0);
 
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday);
@@ -20,93 +39,186 @@ const TimeTable = () => {
         return dates;
     };
 
-    const weekDates = generateWeekDates();
+    const weekDates = useMemo(() => generateWeekDates(), []);
+
+    const weekStartKey = useMemo(() => {
+        const monday = weekDates[0];
+        const y = monday.getFullYear();
+        const m = String(monday.getMonth() + 1).padStart(2, '0');
+        const d = String(monday.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }, [weekDates]);
 
     const formatDate = (date) => {
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const day = days[date.getDay()];
         const dateNum = date.getDate();
         const month = date.getMonth() + 1;
-        return { day, dateNum, month, fullDate: `${date.getFullYear()}-${month}-${dateNum}` };
+        const fullDate = `${date.getFullYear()}-${String(month).padStart(2, '0')}-${String(dateNum).padStart(2, '0')}`;
+        return { day, dateNum, month, fullDate };
     };
 
-    const toggleCheckbox = (taskId, dateKey) => {
-        setSchedule(schedule.map(task => {
-            if (task.id === taskId) {
-                return {
-                    ...task,
-                    dates: {
-                        ...task.dates,
-                        [dateKey]: !task.dates[dateKey]
-                    }
-                };
+    useEffect(() => {
+        const load = async () => {
+            setLoading(true);
+            setError("");
+            try {
+                const res = await timetableAPI.getWeek(weekStartKey);
+                const rows = (res.data || []).map((r) => ({
+                    id: r._id,
+                    time: r.time || "",
+                    activity: r.activity || "",
+                    dates: normalizeDates(r.dates)
+                }));
+                setSchedule(rows);
+            } catch (e) {
+                console.error("Failed to load timetable:", e);
+                setError(e?.response?.data?.error || "Failed to load timetable");
+            } finally {
+                setLoading(false);
             }
-            return task;
-        }));
+        };
+
+        load();
+    }, [weekStartKey]);
+
+    const queueSave = (rowId, patch) => {
+        const existing = saveTimersRef.current.get(rowId);
+        if (existing) clearTimeout(existing);
+        const timer = setTimeout(async () => {
+            try {
+                await timetableAPI.updateRow(rowId, patch);
+            } catch (e) {
+                console.error("Failed to save row:", e);
+                setError(e?.response?.data?.error || "Failed to save row");
+            } finally {
+                saveTimersRef.current.delete(rowId);
+            }
+        }, 400);
+        saveTimersRef.current.set(rowId, timer);
     };
 
-    const addNewRow = () => {
-        const newId = schedule.length + 1;
-        setSchedule([...schedule, { id: newId, time: "", activity: "", dates: {} }]);
+    const toggleCheckbox = async (taskId, dateKey) => {
+        const row = schedule.find((t) => t.id === taskId);
+        if (!row) return;
+
+        const currentDates = normalizeDates(row.dates);
+        const nextDates = {
+            ...currentDates,
+            [dateKey]: !currentDates[dateKey]
+        };
+
+        setSchedule(prev => prev.map(task => (
+            task.id === taskId ? { ...task, dates: nextDates } : task
+        )));
+
+        try {
+            await timetableAPI.updateRow(taskId, { dates: nextDates });
+        } catch (e) {
+            console.error("Failed to toggle:", e);
+            setError(e?.response?.data?.error || "Failed to update checkbox");
+            // revert
+            setSchedule(prev => prev.map(task => (
+                task.id === taskId ? { ...task, dates: currentDates } : task
+            )));
+        }
     };
 
-    const deleteRow = (id) => {
-        setSchedule(schedule.filter(task => task.id !== id));
+    const addNewRow = async () => {
+        setError("");
+        try {
+            const created = await timetableAPI.createRow({
+                weekStart: weekStartKey,
+                time: "",
+                activity: "",
+                dates: {}
+            });
+            const row = created.data;
+            setSchedule(prev => [...prev, { id: row._id, time: row.time || "", activity: row.activity || "", dates: row.dates || {} }]);
+        } catch (e) {
+            console.error("Failed to create row:", e);
+            setError(e?.response?.data?.error || "Failed to create row");
+        }
+    };
+
+    const deleteRow = async (id) => {
+        setSchedule(prev => prev.filter(task => task.id !== id));
+        try {
+            await timetableAPI.deleteRow(id);
+        } catch (e) {
+            console.error("Failed to delete row:", e);
+            setError(e?.response?.data?.error || "Failed to delete row");
+        }
     };
 
     const updateTask = (id, field, value) => {
-        setSchedule(schedule.map(task =>
+        setSchedule(prev => prev.map(task =>
             task.id === id ? { ...task, [field]: value } : task
         ));
+        if (field === 'time' || field === 'activity') {
+            queueSave(id, { [field]: value });
+        }
     };
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
             <Sidebar />
             <div className="ml-64 p-6 h-screen overflow-auto">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-semibold mb-2">TimeTable</h1>
-                    <p className="text-gray-400">Manage your weekly schedule</p>
+                    <h1 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">TimeTable</h1>
+                    <p className="text-gray-600 dark:text-gray-400">Manage your weekly schedule</p>
                 </div>
 
-                <div className="bg-gray-900/50 rounded-lg border border-gray-800 overflow-hidden">
+                {error && (
+                    <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                        {error}
+                    </div>
+                )}
+
+                <div className="bg-gray-100/70 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full min-w-[900px]">
                             <thead>
-                                <tr className="border-b border-gray-800">
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 bg-gray-900/70 w-32">
+                                <tr className="border-b border-gray-200 dark:border-gray-800">
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-32">
                                         Time
                                     </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400 bg-gray-900/70 w-48">
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-48">
                                         Activity
                                     </th>
                                     {weekDates.map((date, index) => {
                                         const { day, dateNum, month } = formatDate(date);
                                         return (
-                                            <th key={index} className="px-4 py-3 text-center text-sm font-medium text-gray-400 bg-gray-900/70 w-24">
+                                            <th key={index} className="px-4 py-3 text-center text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-24">
                                                 <div>{day}</div>
-                                                <div className="text-xs text-gray-500">{month}/{dateNum}</div>
+                                                <div className="text-xs text-gray-600 dark:text-gray-500">{month}/{dateNum}</div>
                                             </th>
                                         );
                                     })}
-                                    <th className="px-4 py-3 text-center text-sm font-medium text-gray-400 bg-gray-900/70 w-20">
+                                    <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-20">
                                         
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {schedule.map((task, rowIndex) => (
-                                    <tr key={task.id} className="border-b border-gray-800 hover:bg-gray-800/30 transition">
-                                        <td className="px-4 py-3 border-r border-gray-800">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={weekDates.length + 3} className="px-4 py-6 text-center text-gray-500">
+                                            Loading...
+                                        </td>
+                                    </tr>
+                                ) : schedule.map((task, rowIndex) => (
+                                    <tr key={task.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-200/60 dark:hover:bg-gray-800/30 transition">
+                                        <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-800">
                                             <input
                                                 type="time"
                                                 value={task.time}
                                                 onChange={(e) => updateTask(task.id, 'time', e.target.value)}
-                                                className="w-full bg-transparent text-sm focus:outline-none focus:text-cyan-400 transition cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                                className="w-full bg-transparent text-sm focus:outline-none focus:text-cyan-400 transition cursor-pointer dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                                                 placeholder="Select time"
                                             />
                                         </td>
-                                        <td className="px-4 py-3 border-r border-gray-800">
+                                        <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-800">
                                             <input
                                                 type="text"
                                                 value={task.activity}
@@ -119,7 +231,7 @@ const TimeTable = () => {
                                             const { fullDate } = formatDate(date);
                                             const isChecked = task.dates[fullDate] || false;
                                             return (
-                                                <td key={colIndex} className="px-4 py-3 border-r border-gray-800 text-center">
+                                                <td key={colIndex} className="px-4 py-3 border-r border-gray-200 dark:border-gray-800 text-center">
                                                     <div className="flex justify-center">
                                                         <label className="cursor-pointer">
                                                             <input

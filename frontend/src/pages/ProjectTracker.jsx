@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import { projectsAPI, tasksAPI } from "../services/api";
 
 const ProjectTracker = () => {
     const colorOptions = {
@@ -33,6 +34,51 @@ const ProjectTracker = () => {
         done: []
     });
 
+    const [activeProjectId, setActiveProjectId] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        const init = async () => {
+            setLoading(true);
+            setError("");
+            try {
+                const projectsRes = await projectsAPI.getAll();
+                let project = projectsRes.data?.[0];
+                if (!project) {
+                    const created = await projectsAPI.create({
+                        name: "My Project",
+                        description: "",
+                        color: "blue"
+                    });
+                    project = created.data;
+                }
+
+                setActiveProjectId(project._id);
+
+                const tasksRes = await tasksAPI.getAll({ project: project._id });
+                const board = { todo: [], inProgress: [], done: [] };
+                (tasksRes.data || []).forEach((t) => {
+                    const status = t.status || "todo";
+                    const uiTask = {
+                        ...t,
+                        id: t._id,
+                        // keep date values as ISO/Date strings; UI formats them
+                    };
+                    if (board[status]) board[status].push(uiTask);
+                });
+                setTasks(board);
+            } catch (e) {
+                console.error("Failed to load project board:", e);
+                setError(e?.response?.data?.error || "Failed to load board");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        init();
+    }, []);
+
     const [draggedTask, setDraggedTask] = useState(null);
     const [draggedFrom, setDraggedFrom] = useState(null);
     const [draggingTaskId, setDraggingTaskId] = useState(null);
@@ -65,7 +111,7 @@ const ProjectTracker = () => {
         e.dataTransfer.dropEffect = 'move';
     };
 
-    const handleDrop = (e, column) => {
+    const handleDrop = async (e, column) => {
         e.preventDefault();
         let taskId = e.dataTransfer.getData("taskId");
         let sourceColumn = e.dataTransfer.getData("sourceColumn");
@@ -84,17 +130,37 @@ const ProjectTracker = () => {
         }
         
         if (taskId && sourceColumn && sourceColumn !== column) {
+            // optimistic UI move
+            let movedTask = null;
             setTasks(prev => {
                 const taskToMove = prev[sourceColumn].find(t => t.id === taskId);
+                movedTask = taskToMove;
                 if (taskToMove) {
                     return {
                         ...prev,
                         [sourceColumn]: prev[sourceColumn].filter(t => t.id !== taskId),
-                        [column]: [...prev[column], taskToMove]
+                        [column]: [...prev[column], { ...taskToMove, status: column, completed: column === 'done' }]
                     };
                 }
                 return prev;
             });
+
+            try {
+                await tasksAPI.move(taskId, column);
+            } catch (err) {
+                console.error("Failed to move task:", err);
+                // revert on failure
+                if (movedTask) {
+                    setTasks(prev => {
+                        const without = prev[column].filter(t => t.id !== taskId);
+                        return {
+                            ...prev,
+                            [column]: without,
+                            [sourceColumn]: [...prev[sourceColumn], movedTask]
+                        };
+                    });
+                }
+            }
         }
         
         setDraggedTask(null);
@@ -156,48 +222,61 @@ const ProjectTracker = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
-        const formattedData = {
-            ...formData,
-            startDate: formatDateToDisplay(formData.startDate),
-            dueDate: formatDateToDisplay(formData.dueDate)
-        };
-        
-        if (editingTask) {
-            // Update existing task
-            setTasks(prev => ({
-                ...prev,
-                [modalColumn]: prev[modalColumn].map(t =>
-                    t.id === editingTask.id
-                        ? { ...t, ...formattedData }
-                        : t
-                )
-            }));
-        } else {
-            // Add new task
-            const newId = `IAT-${Date.now()}`;
-            const newTask = {
-                id: newId,
-                ...formattedData,
-                assignee: null,
-                completed: modalColumn === 'done'
+        (async () => {
+            if (!activeProjectId) {
+                setError("Project not ready yet");
+                return;
+            }
+
+            setError("");
+
+            const payload = {
+                title: formData.title,
+                description: formData.description,
+                tag: formData.tag,
+                tagColor: formData.tagColor,
+                startDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
+                dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined,
+                status: modalColumn,
+                project: activeProjectId
             };
-            setTasks(prev => ({
-                ...prev,
-                [modalColumn]: [...prev[modalColumn], newTask]
-            }));
-        }
-        
-        setShowModal(false);
-        setEditingTask(null);
-        setFormData({
-            title: "",
-            description: "",
-            tag: "",
-            tagColor: "blue",
-            startDate: "",
-            dueDate: ""
-        });
+
+            try {
+                if (editingTask) {
+                    const updated = await tasksAPI.update(editingTask.id, payload);
+                    const updatedTask = { ...updated.data, id: updated.data._id };
+                    setTasks(prev => ({
+                        ...prev,
+                        todo: prev.todo.filter(t => t.id !== editingTask.id),
+                        inProgress: prev.inProgress.filter(t => t.id !== editingTask.id),
+                        done: prev.done.filter(t => t.id !== editingTask.id),
+                        [updatedTask.status || modalColumn]: [...prev[updatedTask.status || modalColumn], updatedTask]
+                    }));
+                } else {
+                    const created = await tasksAPI.create(payload);
+                    const createdTask = { ...created.data, id: created.data._id };
+                    const status = createdTask.status || modalColumn;
+                    setTasks(prev => ({
+                        ...prev,
+                        [status]: [...prev[status], createdTask]
+                    }));
+                }
+
+                setShowModal(false);
+                setEditingTask(null);
+                setFormData({
+                    title: "",
+                    description: "",
+                    tag: "",
+                    tagColor: "blue",
+                    startDate: "",
+                    dueDate: ""
+                });
+            } catch (err) {
+                console.error("Failed to save task:", err);
+                setError(err?.response?.data?.error || "Failed to save task");
+            }
+        })();
     };
 
     const handleFormChange = (field, value) => {
@@ -212,7 +291,7 @@ const ProjectTracker = () => {
         return columnTasks.filter(task =>
             task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             task.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            task.tag.toLowerCase().includes(searchQuery.toLowerCase())
+            (task.tag || "").toLowerCase().includes(searchQuery.toLowerCase())
         );
     };
 
@@ -223,30 +302,30 @@ const ProjectTracker = () => {
                 onDragStart={(e) => handleDragStart(e, task, column)}
                 onDragEnd={handleDragEnd}
                 onClick={() => handleEditTask(task, column)}
-                className={`bg-gray-900 border border-gray-800 rounded-lg p-4 mb-3 cursor-pointer hover:border-cyan-500/50 transition group select-none ${
+                className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-3 cursor-pointer hover:border-cyan-500/50 transition group select-none ${
                     draggingTaskId === task.id ? "opacity-60 border-cyan-500/40" : ""
                 }`}
             >
-            <h3 className="text-white font-medium mb-2">{task.title}</h3>
+            <h3 className="text-gray-900 dark:text-white font-medium mb-2">{task.title}</h3>
             {task.description && (
-                <p className="text-gray-400 text-sm mb-2 line-clamp-2">{task.description}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-2 line-clamp-2">{task.description}</p>
             )}
             <span className={`inline-block px-2 py-1 rounded text-xs font-medium mb-3 ${colorOptions[task.tagColor || 'blue']?.bg || 'bg-blue-500/20'} ${colorOptions[task.tagColor || 'blue']?.text || 'text-blue-400'} border ${colorOptions[task.tagColor || 'blue']?.border || 'border-blue-500/30'}`}>
                 {task.tag}
             </span>
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-800">
-                <div className="flex items-center gap-2 text-xs text-gray-400">
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    {task.dueDate}
+                    {formatDateToDisplay(task.dueDate)}
                 </div>
             </div>
             <div className="flex items-center gap-2 mt-2">
                 <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                <span className="text-xs text-gray-500">{task.id}</span>
+                <span className="text-xs text-gray-600 dark:text-gray-500">{task.id}</span>
             </div>
         </div>
         );
@@ -258,11 +337,11 @@ const ProjectTracker = () => {
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, column)}
         >
-            <div className="bg-gray-900/50 rounded-lg border border-gray-800 p-4 min-h-[500px]">
+            <div className="bg-gray-100/70 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 p-4 min-h-[500px]">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">{title}</h2>
-                        <span className="bg-gray-800 text-gray-400 text-xs font-semibold px-2 py-1 rounded">
+                        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">{title}</h2>
+                        <span className="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-400 text-xs font-semibold px-2 py-1 rounded">
                             {count}
                         </span>
                     </div>
@@ -279,7 +358,7 @@ const ProjectTracker = () => {
                 </div>
                 <button
                     onClick={() => addNewTask(column)}
-                    className="w-full mt-3 py-2 border-2 border-dashed border-gray-800 rounded-lg text-gray-500 hover:border-cyan-500/50 hover:text-cyan-400 transition flex items-center justify-center gap-2"
+                    className="w-full mt-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-800 rounded-lg text-gray-700 dark:text-gray-500 hover:border-cyan-500/50 hover:text-cyan-500 dark:hover:text-cyan-400 transition flex items-center justify-center gap-2"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -291,12 +370,18 @@ const ProjectTracker = () => {
     );
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
             <Sidebar />
             <div className="ml-64 p-6 overflow-auto">
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-2xl font-semibold mb-4">Project Tracker</h1>
+
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                            {error}
+                        </div>
+                    )}
                     
                     {/* Search and Filter Bar */}
                     <div className="flex items-center gap-3">
@@ -310,7 +395,7 @@ const ProjectTracker = () => {
                                 placeholder="Search board"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
                             />
                         </div>
                     </div>
@@ -341,14 +426,14 @@ const ProjectTracker = () => {
                 {/* Modal for Add/Edit Task */}
                 {showModal && (
                     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                        <div className="bg-gray-900 border border-gray-800 rounded-lg max-w-lg w-full p-6">
+                        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg max-w-lg w-full p-6">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-semibold text-white">
+                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                                     {editingTask ? "Edit Task" : "Add New Task"}
                                 </h2>
                                 <button
                                     onClick={() => setShowModal(false)}
-                                    className="text-gray-400 hover:text-white transition"
+                                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -358,7 +443,7 @@ const ProjectTracker = () => {
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                         Title *
                                     </label>
                                     <input
@@ -366,26 +451,26 @@ const ProjectTracker = () => {
                                         required
                                         value={formData.title}
                                         onChange={(e) => handleFormChange('title', e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
                                         placeholder="Enter task title"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                         Description
                                     </label>
                                     <textarea
                                         value={formData.description}
                                         onChange={(e) => handleFormChange('description', e.target.value)}
                                         rows="3"
-                                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition resize-none"
+                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition resize-none"
                                         placeholder="Enter task description"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                         Tag *
                                     </label>
                                     <input
@@ -393,13 +478,13 @@ const ProjectTracker = () => {
                                         required
                                         value={formData.tag}
                                         onChange={(e) => handleFormChange('tag', e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
                                         placeholder="Enter tag (e.g. FrontEnd, BackEnd, Design)"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                         Tag Color *
                                     </label>
                                     <div className="flex gap-2 flex-wrap">
@@ -411,7 +496,7 @@ const ProjectTracker = () => {
                                                 className={`w-10 h-10 rounded-lg border-2 transition ${
                                                     formData.tagColor === color
                                                         ? `${colorOptions[color].selectedBorder} ${colorOptions[color].selectedBg}`
-                                                        : 'border-gray-700 hover:border-gray-600'
+                                                        : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600'
                                                 } ${colorOptions[color].bg}`}
                                                 title={color.charAt(0).toUpperCase() + color.slice(1)}
                                             >
@@ -423,7 +508,7 @@ const ProjectTracker = () => {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                             Start Date *
                                         </label>
                                         <input
@@ -431,12 +516,12 @@ const ProjectTracker = () => {
                                             required
                                             value={formData.startDate}
                                             onChange={(e) => handleFormChange('startDate', e.target.value)}
-                                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 transition dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                             Due Date *
                                         </label>
                                         <input
@@ -444,7 +529,7 @@ const ProjectTracker = () => {
                                             required
                                             value={formData.dueDate}
                                             onChange={(e) => handleFormChange('dueDate', e.target.value)}
-                                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500 transition [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 transition dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                                         />
                                     </div>
                                 </div>
@@ -453,7 +538,7 @@ const ProjectTracker = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowModal(false)}
-                                        className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition"
+                                        className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition"
                                     >
                                         Cancel
                                     </button>
