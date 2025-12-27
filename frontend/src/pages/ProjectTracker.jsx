@@ -334,10 +334,16 @@ const ProjectTracker = () => {
     const Column = ({ title, count, column, tasks }) => (
         <div
             className="flex-1 min-w-[300px]"
+            onDragEnter={handleDragOver}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, column)}
         >
-            <div className="bg-gray-100/70 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 p-4 min-h-[500px]">
+            <div
+                className="bg-gray-100/70 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 p-4 min-h-[500px]"
+                onDragEnter={handleDragOver}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, column)}
+            >
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">{title}</h2>
@@ -351,7 +357,12 @@ const ProjectTracker = () => {
                         </svg>
                     )}
                 </div>
-                <div className="space-y-3 min-h-[200px]">
+                <div
+                    className="space-y-3 min-h-[200px]"
+                    onDragEnter={handleDragOver}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, column)}
+                >
                     {filteredTasks(tasks).map(task => (
                         <TaskCard key={task.id} task={task} column={column} />
                     ))}

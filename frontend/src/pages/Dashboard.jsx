@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import axios from 'axios';
+import { projectsAPI, tasksAPI, timeEntriesAPI, todosAPI } from "../services/api";
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const TIME_TRACKER_STORAGE_KEY = 'trackhub.timeTracker';
     const [searchQuery, setSearchQuery] = useState("");
     const [greeting, setGreeting] = useState("");
     const [userName, setUserName] = useState("");
@@ -21,9 +22,49 @@ const Dashboard = () => {
     const [totalHoursWeek, setTotalHoursWeek] = useState(0);
     
     // Stats State
-    const [tasksCompleted, setTasksCompleted] = useState(0);
-    const [totalTasks, setTotalTasks] = useState(0);
+    const [todaysTodosCompleted, setTodaysTodosCompleted] = useState(0);
+    const [todaysTodosTotal, setTodaysTodosTotal] = useState(0);
     const [activeProjects, setActiveProjects] = useState(0);
+
+    const persistTimeTrackerState = (next) => {
+        try {
+            localStorage.setItem(TIME_TRACKER_STORAGE_KEY, JSON.stringify(next));
+        } catch {
+            // ignore
+        }
+    };
+
+    const clearTimeTrackerState = () => {
+        try {
+            localStorage.removeItem(TIME_TRACKER_STORAGE_KEY);
+        } catch {
+            // ignore
+        }
+    };
+
+    const restoreTimeTrackerState = () => {
+        try {
+            const raw = localStorage.getItem(TIME_TRACKER_STORAGE_KEY);
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            const restoredIsTracking = !!parsed?.isTracking;
+            const restoredIsPaused = !!parsed?.isPaused;
+            const restoredStartTime = typeof parsed?.startTime === 'number' ? parsed.startTime : null;
+            const restoredElapsed = typeof parsed?.elapsedTime === 'number' ? parsed.elapsedTime : 0;
+
+            setIsTracking(restoredIsTracking);
+            setIsPaused(restoredIsPaused);
+            setStartTime(restoredStartTime);
+
+            if (restoredIsTracking && restoredStartTime) {
+                setElapsedTime(Date.now() - restoredStartTime);
+            } else {
+                setElapsedTime(restoredElapsed);
+            }
+        } catch {
+            // ignore
+        }
+    };
 
     useEffect(() => {
         // Get user name from localStorage
@@ -44,6 +85,9 @@ const Dashboard = () => {
         
         // Load data
         fetchDashboardData();
+
+        // Restore timer state so it doesn't restart on page change
+        restoreTimeTrackerState();
     }, []);
     
     // Timer effect
@@ -57,51 +101,70 @@ const Dashboard = () => {
         return () => clearInterval(interval);
     }, [isTracking, startTime]);
 
-    // Timer effect
+    // Persist timer state changes
     useEffect(() => {
-        let interval;
-        if (isTracking) {
-            interval = setInterval(() => {
-                setElapsedTime(Date.now() - startTime);
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [isTracking, startTime]);
+        persistTimeTrackerState({
+            isTracking,
+            isPaused,
+            startTime,
+            elapsedTime,
+        });
+    }, [isTracking, isPaused, startTime, elapsedTime]);
     
     const fetchDashboardData = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const config = {
-                headers: { Authorization: `Bearer ${token}` }
-            };
-            
             // Fetch time entries for the week
-            const today = new Date();
-            const weekStart = new Date(today);
-            weekStart.setDate(today.getDate() - today.getDay());
+            const now = new Date();
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
             weekStart.setHours(0, 0, 0, 0);
-            
-            const API_BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || 'http://localhost:5000';
-            
-            const entriesRes = await axios.get(
-                `${API_BASE_URL}/api/time-entries?startDate=${weekStart.toISOString()}`,
-                config
-            );
-            
-            setTimeEntries(entriesRes.data || []);
-            
-            // Calculate weekly data
-            calculateWeeklyData(entriesRes.data || []);
-            
-            // Fetch tasks
-            const tasksRes = await axios.get(`${API_BASE_URL}/api/tasks`, config);
+
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
+
+            const [entriesRes, todosRes, tasksRes, projectsRes] = await Promise.all([
+                timeEntriesAPI.getAll({
+                    startDate: weekStart.toISOString(),
+                    endDate: weekEnd.toISOString(),
+                }),
+                todosAPI.getAll(),
+                tasksAPI.getAll(),
+                projectsAPI.getAll(),
+            ]);
+
+            const entries = entriesRes.data || [];
+            setTimeEntries(entries);
+            calculateWeeklyData(entries);
+
+            // Today's TODO counts (matches ToDo.jsx behaviour: tasks with no dueDate are shown for any day)
+            const todos = todosRes.data || [];
+            const isSameDay = (date1, date2) => date1.toDateString() === date2.toDateString();
+            const todayDate = new Date();
+            const todaysTodos = todos.filter((t) => {
+                if (!t?.dueDate) return true;
+                const due = new Date(t.dueDate);
+                if (Number.isNaN(due.getTime())) return true;
+                return isSameDay(due, todayDate);
+            });
+            setTodaysTodosTotal(todaysTodos.length);
+            setTodaysTodosCompleted(todaysTodos.filter((t) => !!t.completed).length);
+
+            // Active projects = projects that currently have >=1 task in ProjectTracker's "inProgress" column
             const tasks = tasksRes.data || [];
-            setTotalTasks(tasks.length);
-            setTasksCompleted(tasks.filter(t => t.completed).length);
-            
-            // Fetch projects
-            const projectsRes = await axios.get(`${API_BASE_URL}/api/projects`, config);
-            setActiveProjects((projectsRes.data || []).length);
+            const inProgressProjectIds = new Set(
+                tasks
+                    .filter((t) => (t?.status || "todo") === "inProgress")
+                    .map((t) => (typeof t.project === "string" ? t.project : t?.project?._id))
+                    .filter(Boolean)
+            );
+            const projects = projectsRes.data || [];
+            const projectIds = new Set(projects.map((p) => p?._id).filter(Boolean));
+            let active = 0;
+            inProgressProjectIds.forEach((id) => {
+                if (projectIds.has(id)) active += 1;
+            });
+            setActiveProjects(active);
             
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
@@ -112,8 +175,11 @@ const Dashboard = () => {
         const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const weekData = daysOfWeek.map(day => ({ day, hours: 0 }));
         
-        const today = new Date();
-        const todayStart = new Date(today.setHours(0, 0, 0, 0));
+        const now = new Date();
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        const tomorrowStart = new Date(todayStart);
+        tomorrowStart.setDate(todayStart.getDate() + 1);
         let todayHours = 0;
         let weekHours = 0;
         
@@ -123,7 +189,7 @@ const Dashboard = () => {
             weekData[dayIndex].hours += entry.hours || 0;
             weekHours += entry.hours || 0;
             
-            if (entryDate >= todayStart) {
+            if (entryDate >= todayStart && entryDate < tomorrowStart) {
                 todayHours += entry.hours || 0;
             }
         });
@@ -134,9 +200,12 @@ const Dashboard = () => {
     };
     
     const handleClockIn = () => {
+        const now = Date.now();
         setIsTracking(true);
-        setStartTime(Date.now());
+        setIsPaused(false);
+        setStartTime(now);
         setElapsedTime(0);
+        persistTimeTrackerState({ isTracking: true, isPaused: false, startTime: now, elapsedTime: 0 });
     };
     
     const handleClockOut = async () => {
@@ -148,34 +217,47 @@ const Dashboard = () => {
         
         // Save to backend
         try {
-            const token = localStorage.getItem('token');
-            const API_BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || 'http://localhost:5000';
-            
             const now = new Date();
             const startTimeObj = new Date(startTime);
-            
-            await axios.post(
-                `${API_BASE_URL}/api/time-entries`,
-                {
-                    date: now.toISOString(),
-                    startTime: startTimeObj.toTimeString().slice(0, 5),
-                    endTime: now.toTimeString().slice(0, 5),
-                    hours: parseFloat(hours.toFixed(2)),
-                    description: 'Work session'
-                },
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
+
+            await timeEntriesAPI.create({
+                date: now.toISOString(),
+                startTime: startTimeObj.toTimeString().slice(0, 5),
+                endTime: now.toTimeString().slice(0, 5),
+                hours: parseFloat(hours.toFixed(2)),
+                description: 'Work session'
+            });
             
             // Refresh data
             fetchDashboardData();
         } catch (error) {
             console.error('Error saving time entry:', error);
         }
-        
+
+        clearTimeTrackerState();
         setElapsedTime(0);
         setStartTime(null);
+    };
+
+    const handleDeleteTimeEntry = async (entryId) => {
+        try {
+            await timeEntriesAPI.delete(entryId);
+            setTimeEntries((prev) => prev.filter((e) => e?._id !== entryId));
+            fetchDashboardData();
+        } catch (error) {
+            console.error('Error deleting time entry:', error);
+        }
+    };
+
+    const handleClearRecentActivity = async () => {
+        try {
+            const ids = (timeEntries || []).map((e) => e?._id).filter(Boolean);
+            await Promise.all(ids.map((id) => timeEntriesAPI.delete(id)));
+            setTimeEntries([]);
+            fetchDashboardData();
+        } catch (error) {
+            console.error('Error clearing time entries:', error);
+        }
     };
     
     const formatTime = (ms) => {
@@ -190,8 +272,8 @@ const Dashboard = () => {
         { 
             id: 1, 
             label: "Tasks Completed", 
-            value: `${tasksCompleted}/${totalTasks}`,
-            percentage: totalTasks > 0 ? Math.round((tasksCompleted / totalTasks) * 100) : 0
+            value: `${todaysTodosCompleted}/${todaysTodosTotal}`,
+            percentage: todaysTodosTotal > 0 ? Math.round((todaysTodosCompleted / todaysTodosTotal) * 100) : 0
         },
         { 
             id: 2, 
@@ -452,7 +534,7 @@ const Dashboard = () => {
                     <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Quick Actions</h3>
                     <div className="grid grid-cols-2 gap-3">
                         <button 
-                            onClick={() => navigate('/todos')}
+                            onClick={() => navigate('/todo')}
                             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-cyan-500 dark:hover:border-cyan-500 transition-all group"
                         >
                             <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center mb-2 group-hover:bg-cyan-500/20">
@@ -464,7 +546,7 @@ const Dashboard = () => {
                         </button>
                         
                         <button 
-                            onClick={() => navigate('/projects')}
+                            onClick={() => navigate('/project-tracker')}
                             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-blue-500 dark:hover:border-blue-500 transition-all group"
                         >
                             <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-2 group-hover:bg-blue-500/20">
@@ -488,7 +570,7 @@ const Dashboard = () => {
                         </button>
                         
                         <button 
-                            onClick={() => navigate('/settings')}
+                            onClick={() => navigate('/settings', { state: { backgroundLocation: location } })}
                             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-purple-500 dark:hover:border-purple-500 transition-all group"
                         >
                             <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mb-2 group-hover:bg-purple-500/20">
@@ -504,7 +586,18 @@ const Dashboard = () => {
 
                 {/* Recent Activity */}
                 <div>
-                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Recent Activity</h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h3>
+                        {timeEntries.length > 0 && (
+                            <button
+                                onClick={handleClearRecentActivity}
+                                className="text-xs font-semibold text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition"
+                                aria-label="Clear all recent activity"
+                            >
+                                Clear All
+                            </button>
+                        )}
+                    </div>
                     <div className="space-y-3">
                         {timeEntries.slice(0, 5).map((entry, index) => (
                             <div key={index} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
@@ -512,7 +605,21 @@ const Dashboard = () => {
                                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                                         {entry.description || 'Work Session'}
                                     </p>
-                                    <span className="text-xs text-cyan-500 font-semibold">{entry.hours}h</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-cyan-500 font-semibold">{entry.hours}h</span>
+                                        {entry?._id && (
+                                            <button
+                                                onClick={() => handleDeleteTimeEntry(entry._id)}
+                                                className="text-gray-400 hover:text-red-500 transition"
+                                                aria-label="Delete time entry"
+                                                title="Delete"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

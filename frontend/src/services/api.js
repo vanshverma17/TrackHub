@@ -92,7 +92,7 @@ export const todosAPI = {
 
 // Time Entries API
 export const timeEntriesAPI = {
-  getAll: () => api.get('/time-entries'),
+  getAll: (params) => api.get('/time-entries', params ? { params } : undefined),
   getById: (id) => api.get(`/time-entries/${id}`),
   create: (entryData) => api.post('/time-entries', entryData),
   update: (id, entryData) => api.put(`/time-entries/${id}`, entryData),
