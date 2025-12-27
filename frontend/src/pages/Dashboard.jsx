@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 
 const Dashboard = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [searchQuery, setSearchQuery] = useState("");
     const [greeting, setGreeting] = useState("");
     const [userName, setUserName] = useState("");
@@ -85,9 +88,13 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-                            <span className="text-sm font-semibold">U</span>
-                        </div>
+                        <button 
+                            onClick={() => navigate('/profile', { state: { backgroundLocation: location } })}
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center hover:ring-2 hover:ring-cyan-500 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-offset-black transition cursor-pointer"
+                            aria-label="Open profile"
+                        >
+                            <span className="text-sm font-semibold text-white">{userName.charAt(0).toUpperCase()}</span>
+                        </button>
                         <button className="text-gray-400 hover:text-white transition">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <polyline points="6 9 12 15 18 9"></polyline>

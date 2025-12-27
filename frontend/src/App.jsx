@@ -7,6 +7,7 @@ import ProjectTracker from './pages/ProjectTracker';
 import TimeTable from './pages/TimeTable';
 import ToDo from './pages/ToDo';
 import Settings from './pages/Settings';
+import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function AppWrapper() {
@@ -52,6 +53,15 @@ function AppWrapper() {
               </ProtectedRoute>
             } />
           )}
+
+          {/* Profile as normal route when accessed directly */}
+          {!backgroundLocation && (
+            <Route path='/profile' element={
+              <ProtectedRoute>
+                <Profile/>
+              </ProtectedRoute>
+            } />
+          )}
           
           {/* Catch all - redirect to signin */}
           <Route path='*' element={<Navigate to="/" replace />} />
@@ -63,6 +73,11 @@ function AppWrapper() {
             <Route path='/settings' element={
               <ProtectedRoute>
                 <Settings/>
+              </ProtectedRoute>
+            } />
+            <Route path='/profile' element={
+              <ProtectedRoute>
+                <Profile/>
               </ProtectedRoute>
             } />
           </Routes>
