@@ -12,6 +12,7 @@ const Dashboard = () => {
     
     // Time Tracker State
     const [isTracking, setIsTracking] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
     const [elapsedTime, setElapsedTime] = useState(0);
     const [startTime, setStartTime] = useState(null);
     const [timeEntries, setTimeEntries] = useState([]);
@@ -140,6 +141,7 @@ const Dashboard = () => {
     
     const handleClockOut = async () => {
         setIsTracking(false);
+        setIsPaused(false);
         
         // Calculate hours
         const hours = elapsedTime / (1000 * 60 * 60);
@@ -395,18 +397,29 @@ const Dashboard = () => {
                                 <div className="flex gap-4">
                                     {!isTracking ? (
                                         <button
-                                            onClick={handleClockIn}
+                                            onClick={() => {
+                                                if (isPaused) {
+                                                    setIsTracking(true);
+                                                    setIsPaused(false);
+                                                    setStartTime(Date.now() - elapsedTime);
+                                                } else {
+                                                    handleClockIn();
+                                                }
+                                            }}
                                             className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full font-semibold hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 flex items-center gap-2 shadow-lg"
                                         >
                                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M8 5v14l11-7z"/>
                                             </svg>
-                                            Clock In
+                                            {isPaused ? 'Resume' : 'Clock In'}
                                         </button>
                                     ) : (
                                         <>
                                             <button
-                                                onClick={() => setIsTracking(false)}
+                                                onClick={() => {
+                                                    setIsTracking(false);
+                                                    setIsPaused(true);
+                                                }}
                                                 className="px-6 py-3 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-full font-semibold hover:bg-gray-400 dark:hover:bg-gray-600 transition-all duration-200 flex items-center gap-2"
                                             >
                                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
