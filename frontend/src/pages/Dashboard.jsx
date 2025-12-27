@@ -489,55 +489,6 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Mini Calendar */}
-                <div>
-                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-                        {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                    </h3>
-                    <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-                        <div className="grid grid-cols-7 gap-1 text-center text-xs mb-2">
-                            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-                                <div key={day} className="text-gray-600 dark:text-gray-500 font-medium">{day}</div>
-                            ))}
-                        </div>
-                        <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                            {(() => {
-                                const today = new Date();
-                                const currentDay = today.getDate();
-                                const currentMonth = today.getMonth();
-                                const currentYear = today.getFullYear();
-                                
-                                const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-                                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-                                
-                                const calendar = [];
-                                
-                                for (let i = 0; i < firstDayOfMonth; i++) {
-                                    calendar.push(<div key={`empty-${i}`} className="py-1"></div>);
-                                }
-                                
-                                for (let day = 1; day <= daysInMonth; day++) {
-                                    const isToday = day === currentDay;
-                                    calendar.push(
-                                        <div 
-                                            key={day} 
-                                            className={`py-1 rounded cursor-pointer ${
-                                                isToday 
-                                                    ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-white font-bold' 
-                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                            }`}
-                                        >
-                                            {day}
-                                        </div>
-                                    );
-                                }
-                                
-                                return calendar;
-                            })()}
-                        </div>
-                    </div>
-                </div>
-
                 {/* Recent Activity */}
                 <div>
                     <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Recent Activity</h3>
