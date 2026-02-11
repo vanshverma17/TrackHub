@@ -6,6 +6,7 @@ const TimeTable = () => {
     const [schedule, setSchedule] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const saveTimersRef = useRef(new Map());
 
     const normalizeDates = (dates) => {
@@ -161,12 +162,23 @@ const TimeTable = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
-            <Sidebar />
-            <div className="ml-64 p-6 h-screen overflow-auto">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-white">TimeTable</h1>
-                    <p className="text-gray-600 dark:text-gray-400">Manage your weekly schedule</p>
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden">
+            <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
+            <div className="md:ml-64 p-4 md:p-6 h-screen overflow-auto">
+                <div className="mb-4 md:mb-6">
+                    <div className="flex items-center gap-4 mb-2">
+                        <button
+                            onClick={() => setMobileSidebarOpen(true)}
+                            className="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300"
+                            aria-label="Open menu"
+                        >
+                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <h1 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-white">TimeTable</h1>
+                    </div>
+                    <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">Manage your weekly schedule</p>
                 </div>
 
                 {error && (
@@ -177,25 +189,25 @@ const TimeTable = () => {
 
                 <div className="bg-gray-100/70 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[900px]">
+                        <table className="w-full md:min-w-[900px] min-w-[700px]">
                             <thead>
                                 <tr className="border-b border-gray-200 dark:border-gray-800">
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-32">
+                                    <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-24 md:w-32">
                                         Time
                                     </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-48">
+                                    <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-32 md:w-48">
                                         Activity
                                     </th>
                                     {weekDates.map((date, index) => {
                                         const { day, dateNum, month } = formatDate(date);
                                         return (
-                                            <th key={index} className="px-4 py-3 text-center text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-24">
-                                                <div>{day}</div>
+                                            <th key={index} className="px-2 md:px-4 py-2 md:py-3 text-center text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-16 md:w-24">
+                                                <div className="text-xs">{day}</div>
                                                 <div className="text-xs text-gray-600 dark:text-gray-500">{month}/{dateNum}</div>
                                             </th>
                                         );
                                     })}
-                                    <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-20">
+                                    <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-12 md:w-20">
                                         
                                     </th>
                                 </tr>
@@ -209,21 +221,21 @@ const TimeTable = () => {
                                     </tr>
                                 ) : schedule.map((task, rowIndex) => (
                                     <tr key={task.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-200/60 dark:hover:bg-gray-800/30 transition">
-                                        <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-800">
+                                        <td className="px-2 md:px-4 py-2 md:py-3 border-r border-gray-200 dark:border-gray-800">
                                             <input
                                                 type="time"
                                                 value={task.time}
                                                 onChange={(e) => updateTask(task.id, 'time', e.target.value)}
-                                                className="w-full bg-transparent text-sm focus:outline-none focus:text-cyan-400 transition cursor-pointer dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                                className="w-full bg-transparent text-xs md:text-sm focus:outline-none focus:text-cyan-400 transition cursor-pointer dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                                                 placeholder="Select time"
                                             />
                                         </td>
-                                        <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-800">
+                                        <td className="px-2 md:px-4 py-2 md:py-3 border-r border-gray-200 dark:border-gray-800">
                                             <input
                                                 type="text"
                                                 value={task.activity}
                                                 onChange={(e) => updateTask(task.id, 'activity', e.target.value)}
-                                                className="w-full bg-transparent text-sm focus:outline-none focus:text-cyan-400 transition"
+                                                className="w-full bg-transparent text-xs md:text-sm focus:outline-none focus:text-cyan-400 transition"
                                                 placeholder="Enter activity"
                                             />
                                         </td>
@@ -231,7 +243,7 @@ const TimeTable = () => {
                                             const { fullDate } = formatDate(date);
                                             const isChecked = task.dates[fullDate] || false;
                                             return (
-                                                <td key={colIndex} className="px-4 py-3 border-r border-gray-200 dark:border-gray-800 text-center">
+                                                <td key={colIndex} className="px-2 md:px-4 py-2 md:py-3 border-r border-gray-200 dark:border-gray-800 text-center">
                                                     <div className="flex justify-center">
                                                         <label className="cursor-pointer">
                                                             <input
@@ -245,13 +257,13 @@ const TimeTable = () => {
                                                 </td>
                                             );
                                         })}
-                                        <td className="px-4 py-3 text-center">
+                                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
                                             <button
                                                 onClick={() => deleteRow(task.id)}
                                                 className="text-gray-500 hover:text-red-400 transition-colors p-1 rounded hover:bg-red-500/10"
                                                 title="Delete row"
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
                                             </button>
@@ -265,9 +277,9 @@ const TimeTable = () => {
 
                 <button
                     onClick={addNewRow}
-                    className="mt-4 px-4 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg transition flex items-center gap-2"
+                    className="mt-4 px-3 py-2 md:px-4 md:py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg transition flex items-center gap-2 text-sm md:text-base"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     Add New Row

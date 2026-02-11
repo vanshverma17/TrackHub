@@ -2,7 +2,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { authAPI } from "../services/api";
 import logo from "../assets/logotrack.png";
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -12,7 +12,9 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="w-64 bg-white/90 dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-800 flex flex-col fixed left-0 top-0 h-screen z-10">
+        <>
+            {/* Desktop Sidebar */}
+            <div className="hidden md:flex w-64 bg-white/90 dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-800 flex-col fixed left-0 top-0 h-screen z-10">
             {/* Logo */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex items-center gap-3">
@@ -110,7 +112,120 @@ const Sidebar = () => {
                     </button>
                 </div>
             </nav>
-        </div>
+            </div>
+
+            {/* Mobile Drawer */}
+            {mobileOpen && (
+                <div className="fixed inset-0 z-50 flex">
+                    <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
+                    <div className="w-56 bg-white dark:bg-gray-900 p-3 border-r border-gray-200 dark:border-gray-800 overflow-y-auto z-50">
+                        <div className="flex items-center justify-between mb-3">
+                            <h1 className="text-lg font-bold text-gray-900 dark:text-white">TrackHub</h1>
+                            <button onClick={onClose} className="p-2 rounded-md text-gray-600 dark:text-gray-300">
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                            <nav className="flex flex-col">
+                            {/* Reuse same nav items (copy of above) */}
+                            <div className="space-y-2">
+                                {/* Dashboard */}
+                                <NavLink
+                                    to="/dashboard"
+                                    onClick={onClose}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
+                                    }
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="14" width="7" height="7"></rect>
+                                        <rect x="3" y="14" width="7" height="7"></rect>
+                                    </svg>
+                                    Dashboard
+                                </NavLink>
+
+                                {/* Recreate other links similarly to ensure mobile UX */}
+                                <NavLink
+                                    to="/todo"
+                                    onClick={onClose}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
+                                    }
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                    </svg>
+                                    ToDo List
+                                </NavLink>
+
+                                <NavLink
+                                    to="/project-tracker"
+                                    onClick={onClose}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
+                                    }
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                        <path d="M12 12h.01M12 16h.01M16 12h.01M16 16h.01M8 12h.01M8 16h.01"></path>
+                                    </svg>
+                                    Project Tracker
+                                </NavLink>
+
+                                <NavLink
+                                    to="/timetable"
+                                    onClick={onClose}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
+                                    }
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                    Time Table
+                                </NavLink>
+                            </div>
+
+                            <div className="mt-6 space-y-2">
+                                <NavLink
+                                    to="/settings"
+                                    state={{ backgroundLocation: location }}
+                                    onClick={onClose}
+                                    className={({ isActive }) =>
+                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
+                                    }
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path d="M12 1v6m0 6v6"></path>
+                                        <path d="M17.66 5a9 9 0 1 1-11.31 0"></path>
+                                    </svg>
+                                    Settings
+                                </NavLink>
+
+                                <button 
+                                    onClick={() => { authAPI.logout(); onClose?.(); window.location.href = '/'; }}
+                                    className="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50 rounded-lg transition w-full text-sm"
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    Log Out
+                                </button>
+                            </div>
+                        </nav>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 
