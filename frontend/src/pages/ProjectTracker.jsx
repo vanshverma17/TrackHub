@@ -296,6 +296,24 @@ const ProjectTracker = () => {
         );
     };
 
+    const handleDeleteTask = async (e, taskId, column) => {
+        e.stopPropagation();
+        if (!window.confirm("Are you sure you want to delete this task?")) {
+            return;
+        }
+
+        try {
+            await tasksAPI.delete(taskId);
+            setTasks(prev => ({
+                ...prev,
+                [column]: prev[column].filter(t => t.id !== taskId)
+            }));
+        } catch (err) {
+            console.error("Failed to delete task:", err);
+            setError(err?.response?.data?.error || "Failed to delete task");
+        }
+    };
+
     const TaskCard = ({ task, column }) => {
         return (
             <div
@@ -303,11 +321,20 @@ const ProjectTracker = () => {
                 onDragStart={(e) => handleDragStart(e, task, column)}
                 onDragEnd={handleDragEnd}
                 onClick={() => handleEditTask(task, column)}
-                className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-3 md:p-4 mb-3 cursor-pointer hover:border-cyan-500/50 transition group select-none ${
+                className={`relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-3 md:p-4 mb-3 cursor-pointer hover:border-cyan-500/50 transition group select-none ${
                     draggingTaskId === task.id ? "opacity-60 border-cyan-500/40" : ""
                 }`}
             >
-            <h3 className="text-gray-900 dark:text-white font-medium mb-2 text-sm md:text-base">{task.title}</h3>
+            <button
+                onClick={(e) => handleDeleteTask(e, task.id, column)}
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50"
+                title="Delete task"
+            >
+                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </button>
+            <h3 className="text-gray-900 dark:text-white font-medium mb-2 text-sm md:text-base pr-8">{task.title}</h3>
             {task.description && (
                 <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm mb-2 line-clamp-2">{task.description}</p>
             )}
