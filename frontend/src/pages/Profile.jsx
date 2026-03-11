@@ -49,8 +49,8 @@ const Profile = () => {
 			{/* Profile Panel */}
 			<div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
 				{/* Header */}
-				<div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
-					<h2 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h2>
+				<div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-800">
+					<h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Profile</h2>
 					<button
 						onClick={handleClose}
 						className="p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800 transition"
@@ -63,7 +63,7 @@ const Profile = () => {
 				</div>
 
 				{/* Content */}
-				<div className="p-6 space-y-6">
+				<div className="p-4 md:p-6 space-y-6">
 					{/* Profile Photo */}
 					<div className="flex flex-col items-center">
 						<div className="relative mb-4">
@@ -71,11 +71,11 @@ const Profile = () => {
 								<img
 									src={user.profilePhoto}
 									alt={user.name || 'User'}
-									className="w-32 h-32 rounded-full object-cover border-4 border-cyan-500 shadow-lg"
+									className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-cyan-500 shadow-lg"
 								/>
 							) : (
-								<div className="w-32 h-32 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center border-4 border-cyan-500 shadow-lg">
-									<span className="text-4xl font-bold text-white">
+								<div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center border-4 border-cyan-500 shadow-lg">
+									<span className="text-3xl md:text-4xl font-bold text-white">
 										{getUserInitials()}
 									</span>
 								</div>
@@ -95,7 +95,7 @@ const Profile = () => {
 					{/* User Info Cards */}
 					<div className="space-y-3">
 						{/* Username */}
-						<div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+						<div className="p-3 md:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
 							<div className="flex items-center gap-3">
 								<div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-500">
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +110,7 @@ const Profile = () => {
 						</div>
 
 						{/* Email */}
-						<div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+						<div className="p-3 md:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
 							<div className="flex items-center gap-3">
 								<div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,7 +125,7 @@ const Profile = () => {
 						</div>
 
 						{/* Member Since */}
-						<div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+						<div className="p-3 md:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
 							<div className="flex items-center gap-3">
 								<div className="p-2 rounded-lg bg-green-500/10 text-green-500">
 									<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@ const Profile = () => {
 				</div>
 
 				{/* Footer */}
-				<div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-800">
+				<div className="p-4 md:p-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-800">
 					<p className="text-xs text-center text-gray-500 dark:text-gray-400">
 						Account ID: <span className="font-semibold text-gray-700 dark:text-gray-300">{user?.id || user?._id || 'Loading...'}</span>
 					</p>

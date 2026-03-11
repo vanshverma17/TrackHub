@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { authAPI } from "../services/api";
+import logo from "../assets/logotrack.png";
 
 const SignUp = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -62,7 +63,7 @@ const SignUp = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex">
+        <div className="min-h-screen bg-black text-white flex overflow-x-hidden">
             {/* Left Side - Dashboard Graphics */}
             <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center p-12">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 via-transparent to-transparent"></div>
@@ -115,7 +116,7 @@ const SignUp = () => {
                         </div>
 
                         {/* Middle Row - Graph */}
-                        <div className="border border-cyan-500/30 rounded-lg p-6 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300 animate-fade-in" style={{animationDelay: '0.3s'}}>
+                        <div className="border border-cyan-500/30 rounded-lg p-4 md:p-6 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300 animate-fade-in" style={{animationDelay: '0.3s'}}>
                             <div className="flex items-end gap-1 h-32">
                                 {[30, 60, 45, 80, 50, 90, 70, 85, 60, 75, 55, 95].map((height, i) => (
                                     <div 
@@ -157,12 +158,18 @@ const SignUp = () => {
             </div>
 
             {/* Right Side - Sign Up Form */}
-            <div className="flex-1 flex items-center justify-center p-8 lg:w-1/2">
+            <div className="flex-1 flex items-center justify-center p-4 md:p-8 lg:w-1/2">
                 <div className="w-full max-w-md">
-                    <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-2xl p-8 shadow-2xl">
+                    <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-2xl p-4 md:p-8 shadow-2xl">
+                        {/* Brand - Mobile Only */}
+                        <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
+                            <img src={logo} alt="TrackHub Logo" className="w-10 h-10" />
+                            <span className="text-2xl font-bold text-white">TrackHub</span>
+                        </div>
+                        
                         {/* Header */}
                         <div className="mb-8 text-center">
-                            <h1 className="text-3xl font-bold mb-2">Create an Account</h1>
+                            <h1 className="text-2xl md:text-3xl font-bold mb-2">Create an Account</h1>
                             <p className="text-gray-400 text-sm">
                                 Already have an account?{" "}
                                 <Link to="/" className="text-cyan-500 hover:text-cyan-400 transition">

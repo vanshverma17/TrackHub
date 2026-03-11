@@ -37,6 +37,7 @@ const ProjectTracker = () => {
     const [activeProjectId, setActiveProjectId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     useEffect(() => {
         const init = async () => {
@@ -302,13 +303,13 @@ const ProjectTracker = () => {
                 onDragStart={(e) => handleDragStart(e, task, column)}
                 onDragEnd={handleDragEnd}
                 onClick={() => handleEditTask(task, column)}
-                className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-3 cursor-pointer hover:border-cyan-500/50 transition group select-none ${
+                className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-3 md:p-4 mb-3 cursor-pointer hover:border-cyan-500/50 transition group select-none ${
                     draggingTaskId === task.id ? "opacity-60 border-cyan-500/40" : ""
                 }`}
             >
-            <h3 className="text-gray-900 dark:text-white font-medium mb-2">{task.title}</h3>
+            <h3 className="text-gray-900 dark:text-white font-medium mb-2 text-sm md:text-base">{task.title}</h3>
             {task.description && (
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-2 line-clamp-2">{task.description}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm mb-2 line-clamp-2">{task.description}</p>
             )}
             <span className={`inline-block px-2 py-1 rounded text-xs font-medium mb-3 ${colorOptions[task.tagColor || 'blue']?.bg || 'bg-blue-500/20'} ${colorOptions[task.tagColor || 'blue']?.text || 'text-blue-400'} border ${colorOptions[task.tagColor || 'blue']?.border || 'border-blue-500/30'}`}>
                 {task.tag}
@@ -333,20 +334,20 @@ const ProjectTracker = () => {
 
     const Column = ({ title, count, column, tasks }) => (
         <div
-            className="flex-1 min-w-[300px]"
+            className="flex-1 min-w-[280px] md:min-w-[300px]"
             onDragEnter={handleDragOver}
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, column)}
         >
             <div
-                className="bg-gray-100/70 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 p-4 min-h-[500px]"
+                className="bg-gray-100/70 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 p-3 md:p-4 min-h-[500px]"
                 onDragEnter={handleDragOver}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, column)}
             >
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">{title}</h2>
+                        <h2 className="text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">{title}</h2>
                         <span className="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-400 text-xs font-semibold px-2 py-1 rounded">
                             {count}
                         </span>
@@ -369,9 +370,9 @@ const ProjectTracker = () => {
                 </div>
                 <button
                     onClick={() => addNewTask(column)}
-                    className="w-full mt-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-800 rounded-lg text-gray-700 dark:text-gray-500 hover:border-cyan-500/50 hover:text-cyan-500 dark:hover:text-cyan-400 transition flex items-center justify-center gap-2"
+                    className="w-full mt-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-800 rounded-lg text-gray-700 dark:text-gray-500 hover:border-cyan-500/50 hover:text-cyan-500 dark:hover:text-cyan-400 transition flex items-center justify-center gap-2 text-sm md:text-base"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                     Add Task
@@ -381,12 +382,23 @@ const ProjectTracker = () => {
     );
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
-            <Sidebar />
-            <div className="ml-64 p-6 overflow-auto">
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden">
+            <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
+            <div className="md:ml-64 p-4 md:p-6 overflow-auto">
                 {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-2xl font-semibold mb-4">Project Tracker</h1>
+                <div className="mb-4 md:mb-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <button
+                            onClick={() => setMobileSidebarOpen(true)}
+                            className="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300"
+                            aria-label="Open menu"
+                        >
+                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <h1 className="text-xl md:text-2xl font-semibold">Project Tracker</h1>
+                    </div>
 
                     {error && (
                         <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
@@ -406,7 +418,7 @@ const ProjectTracker = () => {
                                 placeholder="Search board"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                className="w-full pl-10 pr-4 py-2 md:py-2.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm md:text-base"
                             />
                         </div>
                     </div>
@@ -437,9 +449,9 @@ const ProjectTracker = () => {
                 {/* Modal for Add/Edit Task */}
                 {showModal && (
                     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg max-w-lg w-full p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg max-w-lg w-full p-4 md:p-6">
+                            <div className="flex items-center justify-between mb-4 md:mb-6">
+                                <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
                                     {editingTask ? "Edit Task" : "Add New Task"}
                                 </h2>
                                 <button
@@ -454,7 +466,7 @@ const ProjectTracker = () => {
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
+                                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                         Title *
                                     </label>
                                     <input
@@ -462,26 +474,26 @@ const ProjectTracker = () => {
                                         required
                                         value={formData.title}
                                         onChange={(e) => handleFormChange('title', e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm"
                                         placeholder="Enter task title"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
+                                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                         Description
                                     </label>
                                     <textarea
                                         value={formData.description}
                                         onChange={(e) => handleFormChange('description', e.target.value)}
                                         rows="3"
-                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition resize-none"
+                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition resize-none text-sm"
                                         placeholder="Enter task description"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
+                                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                         Tag *
                                     </label>
                                     <input
@@ -489,13 +501,13 @@ const ProjectTracker = () => {
                                         required
                                         value={formData.tag}
                                         onChange={(e) => handleFormChange('tag', e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm"
                                         placeholder="Enter tag (e.g. FrontEnd, BackEnd, Design)"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
+                                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                         Tag Color *
                                     </label>
                                     <div className="flex gap-2 flex-wrap">
@@ -517,9 +529,9 @@ const ProjectTracker = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-3 md:gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
+                                        <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                             Start Date *
                                         </label>
                                         <input
@@ -527,12 +539,12 @@ const ProjectTracker = () => {
                                             required
                                             value={formData.startDate}
                                             onChange={(e) => handleFormChange('startDate', e.target.value)}
-                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 transition dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 transition dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer text-sm"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
+                                        <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                                             Due Date *
                                         </label>
                                         <input
@@ -540,7 +552,7 @@ const ProjectTracker = () => {
                                             required
                                             value={formData.dueDate}
                                             onChange={(e) => handleFormChange('dueDate', e.target.value)}
-                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 transition dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 transition dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer text-sm"
                                         />
                                     </div>
                                 </div>
@@ -549,13 +561,13 @@ const ProjectTracker = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowModal(false)}
-                                        className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition"
+                                        className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition text-sm md:text-base"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition"
+                                        className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition text-sm md:text-base"
                                     >
                                         {editingTask ? "Update Task" : "Add Task"}
                                     </button>

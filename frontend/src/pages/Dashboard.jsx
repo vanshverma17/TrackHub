@@ -26,6 +26,9 @@ const Dashboard = () => {
     const [todaysTodosTotal, setTodaysTodosTotal] = useState(0);
     const [activeProjects, setActiveProjects] = useState(0);
 
+    // Mobile sidebar state
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
     const persistTimeTrackerState = (next) => {
         try {
             localStorage.setItem(TIME_TRACKER_STORAGE_KEY, JSON.stringify(next));
@@ -306,33 +309,47 @@ const Dashboard = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden">
             {/* Left Sidebar */}
-            <Sidebar />
+            <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
 
             {/* Main Content */}
-            <div className="ml-64 mr-80 flex flex-col h-screen overflow-hidden">
+            <div className="md:ml-64 lg:mr-80 flex flex-col h-screen overflow-hidden">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between flex-shrink-0">
-                    <div className="flex-1 max-w-md">
-                        <div className="relative">
-                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.35-4.35"></path>
+                <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
+                    <div className="flex items-center gap-4">
+                        {/* Mobile hamburger */}
+                        <button
+                            onClick={() => setMobileSidebarOpen(true)}
+                            className="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300"
+                            aria-label="Open menu"
+                        >
+                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
-                            <input
-                                type="text"
-                                placeholder="Search habits, or analytics..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
-                            />
+                        </button>
+                        
+                        {/* Search bar - visible on desktop */}
+                        <div className="flex-1 max-w-md hidden md:block">
+                            <div className="relative">
+                                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <input
+                                    type="text"
+                                    placeholder="Search habits, or analytics..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                />
+                            </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-3">
+                        
+                        {/* Profile Icon */}
                         <button 
                             onClick={() => navigate('/profile', { state: { backgroundLocation: location } })}
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center hover:ring-2 hover:ring-cyan-500 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-offset-black transition cursor-pointer"
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center hover:ring-2 hover:ring-cyan-500 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-offset-black transition cursor-pointer flex-shrink-0 ml-auto"
                             aria-label="Open profile"
                         >
                             <span className="text-sm font-semibold text-white">{userName.charAt(0).toUpperCase()}</span>
@@ -341,10 +358,10 @@ const Dashboard = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
                     {/* Greeting */}
                     <div className="mb-6">
-                        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+                        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">
                             Welcome in, <span className="text-cyan-400">{userName}</span>
                         </h1>
                     </div>
@@ -354,11 +371,11 @@ const Dashboard = () => {
                         {stats.map((stat) => (
                             <div 
                                 key={stat.id} 
-                                className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-6"
+                                className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 md:p-6"
                             >
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{stat.label}</p>
                                 <div className="flex items-end justify-between">
-                                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                                    <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                                     {stat.percentage !== undefined && (
                                         <div className="flex items-center gap-2">
                                             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center">
@@ -374,12 +391,12 @@ const Dashboard = () => {
                     {/* Main Content Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Progress - Weekly Hours Bar Chart */}
-                        <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                        <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 md:p-6">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Progress</h2>
                             </div>
                             <div className="mb-4">
-                                <p className="text-4xl font-bold text-gray-900 dark:text-white">{totalHoursWeek.toFixed(1)}h</p>
+                                <p className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">{totalHoursWeek.toFixed(1)}h</p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Work Time this week</p>
                             </div>
                             <div className="flex items-end justify-between h-48 gap-2">
@@ -418,7 +435,7 @@ const Dashboard = () => {
                         </div>
 
                         {/* Time Tracker */}
-                        <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                        <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 md:p-6">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Time Tracker</h2>
                                 <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -463,7 +480,7 @@ const Dashboard = () => {
                                     </svg>
                                     
                                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                        <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                                        <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                                             {formatTime(elapsedTime)}
                                         </div>
                                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Work Time</p>
@@ -523,7 +540,7 @@ const Dashboard = () => {
             </div>
 
             {/* Right Sidebar */}
-            <div className="w-80 bg-gray-50 dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-800 p-6 space-y-6 overflow-y-auto fixed right-0 top-0 h-screen">
+            <div className="hidden lg:block w-80 bg-gray-50 dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-800 p-4 md:p-6 space-y-6 overflow-y-auto fixed right-0 top-0 h-screen">
                 {/* Quick Actions */}
                 <div>
                     <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Quick Actions</h3>

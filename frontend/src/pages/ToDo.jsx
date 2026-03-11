@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebar";
 import { todosAPI } from "../services/api";
 
 const ToDo = () => {
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [tasks, setTasks] = useState([]);
     const [newTaskText, setNewTaskText] = useState("");
@@ -116,22 +117,33 @@ const ToDo = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
-            <Sidebar />
-            <div className="ml-64 flex flex-col h-screen">
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden">
+            <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
+            <div className="md:ml-64 flex flex-col h-screen">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-                    <h1 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">TODO List</h1>
+                <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-3 mb-3 md:mb-4">
+                        <button
+                            onClick={() => setMobileSidebarOpen(true)}
+                            className="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300"
+                            aria-label="Open menu"
+                        >
+                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <h1 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-white">TODO List</h1>
+                    </div>
                     
                     {/* Scrollable Date Picker with Arrows */}
                     <div className="flex items-center gap-2">
                         {/* Left Arrow */}
                         <button
                             onClick={() => scrollDates('left')}
-                            className="flex-shrink-0 p-2 bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200"
+                            className="flex-shrink-0 p-1.5 md:p-2 bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200"
                             aria-label="Scroll left"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
@@ -147,12 +159,12 @@ const ToDo = () => {
                                     display: none;
                                 }
                             `}</style>
-                            <div className="flex gap-3 pb-2">
+                            <div className="flex gap-2 md:gap-3 pb-2">
                                 {dates.map((date, index) => (
                                     <button
                                         key={index}
                                         onClick={() => setSelectedDate(date)}
-                                        className={`flex-shrink-0 px-4 py-3 rounded-lg border transition-all duration-200 min-w-[100px] ${
+                                        className={`flex-shrink-0 px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg border transition-all duration-200 md:min-w-[100px] min-w-[70px] ${
                                             isSameDay(date, selectedDate)
                                                 ? 'bg-cyan-500 border-cyan-500 text-white'
                                                 : isToday(date)
@@ -161,7 +173,7 @@ const ToDo = () => {
                                         }`}
                                     >
                                         <div className="text-xs">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                                        <div className="text-lg font-semibold">{date.getDate()}</div>
+                                        <div className="text-base md:text-lg font-semibold">{date.getDate()}</div>
                                         <div className="text-xs">{date.toLocaleDateString('en-US', { month: 'short' })}</div>
                                     </button>
                                 ))}
@@ -171,10 +183,10 @@ const ToDo = () => {
                         {/* Right Arrow */}
                         <button
                             onClick={() => scrollDates('right')}
-                            className="flex-shrink-0 p-2 bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200"
+                            className="flex-shrink-0 p-1.5 md:p-2 bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200"
                             aria-label="Scroll right"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </button>
@@ -182,12 +194,12 @@ const ToDo = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-6">
-                    <div className="flex gap-6">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                    <div className="flex flex-col md:flex-row gap-6">
                         {/* Main Content */}
-                        <div className="flex-1 max-w-4xl">
+                        <div className="flex-1 w-full md:max-w-4xl">
                             {/* Current Date Display */}
-                            <div className="mb-6">
+                            <div className="mb-4 md:mb-6">
                                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-300">
                                     {selectedDate.toLocaleDateString('en-US', { 
                                         weekday: 'long', 
@@ -200,21 +212,21 @@ const ToDo = () => {
                             </div>
 
                             {/* Add New Task */}
-                            <div className="mb-6">
-                                <div className="flex gap-3">
+                            <div className="mb-4 md:mb-6">
+                                <div className="flex flex-col sm:flex-row gap-3">
                                     <input
                                         type="text"
                                         value={newTaskText}
                                         onChange={(e) => setNewTaskText(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && addTask()}
                                         placeholder="Add a new task..."
-                                        className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+                                        className="flex-1 w-full px-3 py-2.5 md:px-4 md:py-3 bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm md:text-base"
                                     />
                                     <button
                                         onClick={addTask}
-                                        className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition duration-200 flex items-center gap-2"
+                                        className="w-full sm:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition duration-200 flex items-center justify-center gap-2 text-sm md:text-base"
                                     >
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                             <line x1="12" y1="5" x2="12" y2="19"></line>
                                             <line x1="5" y1="12" x2="19" y2="12"></line>
                                         </svg>
@@ -224,7 +236,7 @@ const ToDo = () => {
                             </div>
 
                             {/* Tasks List */}
-                            <div className="bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
+                            <div className="bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl md:rounded-2xl overflow-hidden">
                                 {loading ? (
                                     <div className="p-12 text-center text-gray-600 dark:text-gray-500">
                                         <div className="animate-spin mx-auto mb-4 h-12 w-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full"></div>
@@ -244,7 +256,7 @@ const ToDo = () => {
                                                 key={task._id}
                                                 onMouseEnter={() => setHoveredTaskId(task._id)}
                                                 onMouseLeave={() => setHoveredTaskId(null)}
-                                                className="flex items-center gap-4 px-6 py-4 hover:bg-gray-200/60 dark:hover:bg-gray-800/50 transition-all duration-200 group"
+                                                className="flex items-center gap-3 px-4 py-3 md:px-6 md:py-4 hover:bg-gray-200/60 dark:hover:bg-gray-800/50 transition-all duration-200 group"
                                             >
                                                 {/* Checkbox */}
                                                 <label className="flex items-center cursor-pointer">
@@ -294,8 +306,8 @@ const ToDo = () => {
                             </div>
                         </div>
 
-                        {/* Mini Calendar Widget */}
-                        <div className="flex-shrink-0 w-64">
+                        {/* Mini Calendar Widget - Hidden on mobile */}
+                        <div className="hidden lg:block flex-shrink-0 w-64">
                             <div className="bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-cyan-500/30 rounded-xl p-5 sticky top-0">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
