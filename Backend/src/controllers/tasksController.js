@@ -93,7 +93,14 @@ export const updateTask = async (req, res) => {
 
 export const moveTask = async (req, res) => {
   try {
+    console.log("moveTask called - ID:", req.params.id, "Body:", req.body, "User:", req.user?.id);
     const { status } = req.body;
+    
+    if (!status) {
+      console.log("No status provided");
+      return res.status(400).json({ error: "Status is required" });
+    }
+    
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, createdBy: req.user.id },
       { status, updatedAt: Date.now(), completed: status === "done" },
@@ -101,11 +108,14 @@ export const moveTask = async (req, res) => {
     ).populate("assignee", "name email");
 
     if (!task) {
+      console.log("Task not found for ID:", req.params.id, "User:", req.user.id);
       return res.status(404).json({ error: "Task not found" });
     }
     
+    console.log("Task moved successfully:", task._id, "to", status);
     res.json(task);
   } catch (error) {
+    console.error("moveTask error:", error);
     res.status(500).json({ error: error.message });
   }
 };

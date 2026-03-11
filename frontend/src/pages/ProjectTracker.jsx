@@ -39,6 +39,14 @@ const ProjectTracker = () => {
     const [error, setError] = useState("");
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+    // Auto-clear error after 5 seconds
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(""), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
+
     useEffect(() => {
         const init = async () => {
             setLoading(true);
@@ -114,6 +122,8 @@ const ProjectTracker = () => {
 
     const handleDrop = async (e, column) => {
         e.preventDefault();
+        e.stopPropagation();
+        
         let taskId = e.dataTransfer.getData("taskId");
         let sourceColumn = e.dataTransfer.getData("sourceColumn");
 
@@ -130,7 +140,17 @@ const ProjectTracker = () => {
             }
         }
         
-        if (taskId && sourceColumn && sourceColumn !== column) {
+        console.log("Drop event:", { taskId, sourceColumn, targetColumn: column });
+        
+        if (taskId && sourceColumn) {
+            if (sourceColumn === column) {
+                // Same column, just reset drag state
+                setDraggedTask(null);
+                setDraggedFrom(null);
+                setDraggingTaskId(null);
+                return;
+            }
+            
             // optimistic UI move
             let movedTask = null;
             setTasks(prev => {
@@ -147,9 +167,13 @@ const ProjectTracker = () => {
             });
 
             try {
-                await tasksAPI.move(taskId, column);
+                console.log("Calling tasksAPI.move with:", taskId, column);
+                const response = await tasksAPI.move(taskId, column);
+                console.log("Task moved successfully:", response);
             } catch (err) {
-                console.error("Failed to move task:", err);
+                console.error("Failed to move task - Full error:", err);
+                console.error("Error response:", err?.response);
+                console.error("Error data:", err?.response?.data);
                 // revert on failure
                 if (movedTask) {
                     setTasks(prev => {
@@ -161,6 +185,9 @@ const ProjectTracker = () => {
                         };
                     });
                 }
+                const errorMsg = err?.response?.data?.error || err?.message || "Failed to move task";
+                setError(errorMsg);
+                console.error("Setting error message:", errorMsg);
             }
         }
         
@@ -327,7 +354,7 @@ const ProjectTracker = () => {
             >
             <button
                 onClick={(e) => handleDeleteTask(e, task.id, column)}
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity p-1.5 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50"
                 title="Delete task"
             >
                 <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
