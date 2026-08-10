@@ -1,227 +1,204 @@
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { authAPI } from "../services/api";
 import logo from "../assets/logotrack.png";
 
 const Sidebar = ({ mobileOpen, onClose }) => {
     const navigate = useNavigate();
-    const location = useLocation();
 
     const handleLogout = () => {
         authAPI.logout();
         navigate('/', { replace: true });
     };
 
-    return (
-        <>
-            {/* Desktop Sidebar */}
-            <div className="hidden md:flex w-64 bg-white/90 dark:bg-gray-900/50 border-r border-gray-200 dark:border-gray-800 flex-col fixed left-0 top-0 h-screen z-10">
+    const navItems = [
+        {
+            to: "/dashboard",
+            label: "Dashboard",
+            icon: (
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                </svg>
+            )
+        },
+        {
+            to: "/todo",
+            label: "To-Do List",
+            icon: (
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                </svg>
+            )
+        },
+        {
+            to: "/project-tracker",
+            label: "Project Tracker",
+            icon: (
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="7" width="5" height="13" rx="1" />
+                    <rect x="9.5" y="3" width="5" height="17" rx="1" />
+                    <rect x="17" y="10" width="5" height="10" rx="1" />
+                </svg>
+            )
+        },
+        {
+            to: "/timetable",
+            label: "Time Table",
+            icon: (
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+            )
+        },
+        {
+            to: "/settings",
+            label: "Settings",
+            isSettings: true,
+            icon: (
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+            )
+        },
+    ];
+
+    // Get user info
+    const user = (() => {
+        try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
+    })();
+
+    const SidebarContent = ({ isMobile = false }) => (
+        <div className="flex flex-col h-full">
             {/* Logo */}
-            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">TrackHub</h1>
-                    <img src={logo} alt="TrackHub Logo" className="w-12 h-12 ml-14" />
+            <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <img src={logo} alt="TrackHub" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
+                    <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--white)', letterSpacing: '-0.01em' }}>
+                        TrackHub
+                    </span>
                 </div>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex flex-col flex-1 p-4">
-                <div className="space-y-2">
-                    <NavLink
-                        to="/dashboard"
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                        }
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="3" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="3" width="7" height="7"></rect>
-                            <rect x="14" y="14" width="7" height="7"></rect>
-                            <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        Dashboard
-                    </NavLink>
-
-                    <NavLink
-                        to="/todo"
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                        }
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                        </svg>
-                        ToDo List
-                    </NavLink>
-
-                    <NavLink
-                        to="/project-tracker"
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                        }
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            <path d="M12 12h.01M12 16h.01M16 12h.01M16 16h.01M8 12h.01M8 16h.01"></path>
-                        </svg>
-                        Project Tracker
-                    </NavLink>
-
-                    <NavLink
-                        to="/timetable"
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                        }
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        Time Table
-                    </NavLink>
+            {/* Nav */}
+            <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
+                <div style={{ marginBottom: '4px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--slate-dark)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0 6px', display: 'block', marginBottom: '6px' }}>
+                        Menu
+                    </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    {navItems.slice(0, 4).map((item) => (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            onClick={isMobile ? onClose : undefined}
+                            className={({ isActive }) => `th-nav-item${isActive ? ' active' : ''}`}
+                        >
+                            {item.icon}
+                            <span>{item.label}</span>
+                        </NavLink>
+                    ))}
                 </div>
 
-                {/* Settings and Logout at bottom */}
-                <div className="mt-auto space-y-2">
+                {/* Divider */}
+                <div style={{ height: '1px', background: 'var(--border)', margin: '12px 6px' }} />
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <NavLink
                         to="/settings"
-                        state={{ backgroundLocation: location }}
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-4 py-2.5 rounded-lg transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                        }
+                        onClick={isMobile ? onClose : undefined}
+                        className={({ isActive }) => `th-nav-item${isActive ? ' active' : ''}`}
                     >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M12 1v6m0 6v6"></path>
-                            <path d="M17.66 5a9 9 0 1 1-11.31 0"></path>
-                        </svg>
-                        Settings
+                        {navItems[4].icon}
+                        <span>Settings</span>
                     </NavLink>
 
-                    <button 
-                        onClick={handleLogout}
-                        className="flex items-center gap-3 px-4 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50 rounded-lg transition w-full"
+                    <button
+                        onClick={() => {
+                            authAPI.logout();
+                            if (isMobile) onClose?.();
+                            navigate('/', { replace: true });
+                        }}
+                        className="th-nav-item"
+                        style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}
                     >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
                         </svg>
-                        Log Out
+                        <span>Log Out</span>
                     </button>
                 </div>
             </nav>
+
+            {/* User Badge */}
+            <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border)' }}>
+                <NavLink
+                    to="/profile"
+                    onClick={isMobile ? onClose : undefined}
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', padding: '8px', borderRadius: '8px', transition: 'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--cyan-dim)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                    <div style={{
+                        width: '32px', height: '32px', borderRadius: '50%',
+                        background: 'linear-gradient(135deg, var(--cyan) 0%, #0066cc 100%)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0, fontSize: '13px', fontWeight: '700', color: '#0D0E10'
+                    }}>
+                        {(user?.name || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {user?.name || 'User'}
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--slate)', fontWeight: '500' }}>
+                            {user?.email ? user.email.split('@')[0] : 'member'}
+                        </div>
+                    </div>
+                </NavLink>
+            </div>
+        </div>
+    );
+
+    return (
+        <>
+            {/* Desktop Sidebar */}
+            <div className="th-sidebar hidden md:flex">
+                <SidebarContent />
             </div>
 
             {/* Mobile Drawer */}
             {mobileOpen && (
-                <div className="fixed inset-0 z-50 flex">
-                    <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} />
-                    <div className="w-56 bg-white dark:bg-gray-900 p-3 border-r border-gray-200 dark:border-gray-800 overflow-y-auto z-50">
-                        <div className="flex items-center justify-between mb-3">
-                            <h1 className="text-lg font-bold text-gray-900 dark:text-white">TrackHub</h1>
-                            <button onClick={onClose} className="p-2 rounded-md text-gray-600 dark:text-gray-300">
-                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                            <nav className="flex flex-col">
-                            {/* Reuse same nav items (copy of above) */}
-                            <div className="space-y-2">
-                                {/* Dashboard */}
-                                <NavLink
-                                    to="/dashboard"
-                                    onClick={onClose}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                                    }
-                                >
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect x="3" y="3" width="7" height="7"></rect>
-                                        <rect x="14" y="3" width="7" height="7"></rect>
-                                        <rect x="14" y="14" width="7" height="7"></rect>
-                                        <rect x="3" y="14" width="7" height="7"></rect>
-                                    </svg>
-                                    Dashboard
-                                </NavLink>
-
-                                {/* Recreate other links similarly to ensure mobile UX */}
-                                <NavLink
-                                    to="/todo"
-                                    onClick={onClose}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                                    }
-                                >
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                                    </svg>
-                                    ToDo List
-                                </NavLink>
-
-                                <NavLink
-                                    to="/project-tracker"
-                                    onClick={onClose}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                                    }
-                                >
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                        <path d="M12 12h.01M12 16h.01M16 12h.01M16 16h.01M8 12h.01M8 16h.01"></path>
-                                    </svg>
-                                    Project Tracker
-                                </NavLink>
-
-                                <NavLink
-                                    to="/timetable"
-                                    onClick={onClose}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                                    }
-                                >
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                                    </svg>
-                                    Time Table
-                                </NavLink>
-                            </div>
-
-                            <div className="mt-6 space-y-2">
-                                <NavLink
-                                    to="/settings"
-                                    state={{ backgroundLocation: location }}
-                                    onClick={onClose}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-3 px-3 py-2 rounded-lg w-full text-sm transition ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'}`
-                                    }
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                        <path d="M12 1v6m0 6v6"></path>
-                                        <path d="M17.66 5a9 9 0 1 1-11.31 0"></path>
-                                    </svg>
-                                    Settings
-                                </NavLink>
-
-                                <button 
-                                    onClick={() => { authAPI.logout(); onClose?.(); window.location.href = '/'; }}
-                                    className="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50 rounded-lg transition w-full text-sm"
-                                >
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                        <polyline points="16 17 21 12 16 7"></polyline>
-                                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                                    </svg>
-                                    Log Out
-                                </button>
-                            </div>
-                        </nav>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex' }}>
+                    <div
+                        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+                        onClick={onClose}
+                    />
+                    <div style={{
+                        width: '200px', background: 'var(--surface)', borderRight: '1px solid var(--border)',
+                        height: '100%', position: 'relative', zIndex: 51, display: 'flex', flexDirection: 'column'
+                    }}>
+                        <button
+                            onClick={onClose}
+                            style={{
+                                position: 'absolute', top: '16px', right: '12px', zIndex: 52,
+                                background: 'none', border: 'none', color: 'var(--slate)', cursor: 'pointer', padding: '4px'
+                            }}
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <SidebarContent isMobile={true} />
                     </div>
                 </div>
             )}

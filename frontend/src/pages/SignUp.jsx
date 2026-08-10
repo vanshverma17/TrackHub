@@ -3,307 +3,229 @@ import { useState } from "react";
 import { authAPI } from "../services/api";
 import logo from "../assets/logotrack.png";
 
+// Animated illustration — same as SignIn for brand coherence
+const DashboardPreview = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '460px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+            {['Tasks', 'Hours', 'Projects'].map((label, i) => (
+                <div key={label} style={{
+                    background: 'rgba(23,24,28,0.9)', border: '1px solid rgba(0,210,255,0.15)',
+                    borderRadius: '10px', padding: '14px', animation: `fadeUp 0.6s ease-out ${i * 0.12}s both`, position: 'relative', overflow: 'hidden',
+                }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(0,210,255,0.1)', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'rgba(0,210,255,0.5)', animation: 'pulseGlow 2s infinite' }} />
+                    </div>
+                    <div style={{ fontSize: '22px', fontWeight: '800', color: '#fff', marginBottom: '4px' }}>{['12', '6.5', '4'][i]}</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(138,144,158,0.8)' }}>{label}</div>
+                    {i === 0 && <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', background: '#00D2FF' }} />}
+                </div>
+            ))}
+        </div>
+        <div style={{
+            background: 'rgba(23,24,28,0.9)', border: '1px solid rgba(0,210,255,0.12)',
+            borderRadius: '10px', padding: '16px', animation: 'fadeUp 0.6s ease-out 0.3s both',
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>Weekly Activity</span>
+                <span style={{ fontSize: '10px', color: 'rgba(0,210,255,0.7)' }}>This week</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '70px' }}>
+                {[30, 65, 45, 90, 55, 35, 20].map((h, i) => (
+                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', height: '100%' }}>
+                        <div style={{
+                            width: '100%', borderRadius: '3px 3px 0 0', marginTop: 'auto', height: `${h}%`,
+                            background: i === 3 ? '#00D2FF' : 'rgba(255,255,255,0.08)',
+                            animation: `chartGrow 0.9s ease-out ${i * 0.08}s both`,
+                        }} />
+                        <span style={{ fontSize: '9px', color: i === 3 ? '#00D2FF' : 'rgba(138,144,158,0.6)' }}>
+                            {['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </div>
+        <div style={{
+            background: 'rgba(23,24,28,0.9)', border: '1px solid rgba(0,210,255,0.12)',
+            borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px',
+            animation: 'fadeUp 0.6s ease-out 0.45s both',
+        }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid rgba(0,210,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #00D2FF', marginLeft: '2px' }} />
+            </div>
+            <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: '#fff' }}>Work Session</div>
+                <div style={{ fontSize: '9px', color: 'rgba(138,144,158,0.7)' }}>TrackHub Workspace</div>
+            </div>
+            <div style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: '700', color: '#00D2FF' }}>02:45:12</div>
+            <div style={{ padding: '5px 10px', background: '#00D2FF', borderRadius: '14px', fontSize: '9px', fontWeight: '700', color: '#0D0E10' }}>LIVE</div>
+        </div>
+    </div>
+);
+
 const SignUp = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        password: "",
-        agreeToTerms: false
-    });
+    const [formData, setFormData] = useState({ name: "", email: "", password: "", agreeToTerms: false });
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData({
-            ...formData,
-            [name]: type === "checkbox" ? checked : value
-        });
+        setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
         setError("");
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        if (!formData.agreeToTerms) {
-            setError("Please agree to the terms and conditions");
-            return;
-        }
-
-        setLoading(true);
-        setError("");
-
+        if (!formData.agreeToTerms) { setError("Please agree to the terms and conditions"); return; }
+        setLoading(true); setError("");
         try {
-            const response = await authAPI.register({
-                name: formData.name,
-                email: formData.email,
-                password: formData.password
-            });
-            
+            const response = await authAPI.register({ name: formData.name, email: formData.email, password: formData.password });
             const { token, user } = response.data;
-            
-            // Store token and user data
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
-            
-            // Redirect to dashboard
             navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.error || "Registration failed. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSocialSignUp = (provider) => {
-        console.log(`Sign up with ${provider}`);
+        } finally { setLoading(false); }
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex overflow-x-hidden">
-            {/* Left Side - Dashboard Graphics */}
-            <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center p-12">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 via-transparent to-transparent"></div>
-                
-                {/* TrackHub Text - Fixed at Bottom */}
-                <div className="absolute bottom-8 left-8 text-gray-400 text-xl">
-                    <span className="text-2xl font-bold text-white">TrackHub</span> - Track. Build. Improve.
+        <div style={{ minHeight: '100vh', background: 'var(--canvas)', display: 'flex', fontFamily: "'Inter', sans-serif" }}>
+            {/* Left panel */}
+            <div style={{ flex: '0 0 55%', position: 'relative', borderRight: '1px solid var(--border)', alignItems: 'center', justifyContent: 'center', padding: '40px' }}
+                className="lg-flex-center-su">
+                <style>{`.lg-flex-center-su { display: none; } @media (min-width: 1024px) { .lg-flex-center-su { display: flex !important; } }`}</style>
+                <div style={{
+                    position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.04,
+                    backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)',
+                    backgroundSize: '40px 40px',
+                }} />
+                <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '460px' }}>
+                    <DashboardPreview />
                 </div>
-                
-                <div className="relative z-10 w-full max-w-2xl">
-                    {/* Futuristic Dashboard Illustration */}
-                    <div className="space-y-8">
-                        {/* Top Row - Charts */}
-                        <div className="flex gap-4 animate-fade-in">
-                            <div className="flex-1 border border-cyan-500/30 rounded-lg p-4 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-8 h-8 rounded-full border-2 border-cyan-400/50 animate-pulse"></div>
-                                    <div className="flex-1 space-y-1">
-                                        <div className="h-1 bg-cyan-500/30 rounded animate-pulse"></div>
-                                        <div className="h-1 bg-cyan-500/20 rounded w-3/4 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                                    </div>
-                                </div>
-                                <div className="flex gap-1 items-end h-20">
-                                    <div className="w-2 bg-cyan-500/40 rounded-t animate-chart-grow" style={{height: '40%', animationDelay: '0.1s'}}></div>
-                                    <div className="w-2 bg-cyan-500/40 rounded-t animate-chart-grow" style={{height: '70%', animationDelay: '0.2s'}}></div>
-                                    <div className="w-2 bg-cyan-500/40 rounded-t animate-chart-grow" style={{height: '50%', animationDelay: '0.3s'}}></div>
-                                    <div className="w-2 bg-cyan-500/60 rounded-t animate-chart-grow" style={{height: '90%', animationDelay: '0.4s'}}></div>
-                                    <div className="w-2 bg-cyan-500/40 rounded-t animate-chart-grow" style={{height: '60%', animationDelay: '0.5s'}}></div>
-                                </div>
-                            </div>
-                            <div className="w-32 border border-cyan-500/30 rounded-lg p-4 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300">
-                                <div className="space-y-2">
-                                    <div className="flex gap-1">
-                                        {[...Array(5)].map((_, i) => (
-                                            <div key={i} className="w-2 h-2 rounded-full bg-cyan-500/30 animate-pulse" style={{animationDelay: `${i * 0.1}s`}}></div>
-                                        ))}
-                                    </div>
-                                    <div className="flex gap-1">
-                                        {[...Array(5)].map((_, i) => (
-                                            <div key={i} className="w-2 h-2 rounded-full bg-cyan-500/30 animate-pulse" style={{animationDelay: `${i * 0.1 + 0.5}s`}}></div>
-                                        ))}
-                                    </div>
-                                    <div className="flex gap-1">
-                                        {[...Array(5)].map((_, i) => (
-                                            <div key={i} className="w-2 h-2 rounded-full bg-cyan-500/30 animate-pulse" style={{animationDelay: `${i * 0.1 + 1}s`}}></div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Middle Row - Graph */}
-                        <div className="border border-cyan-500/30 rounded-lg p-4 md:p-6 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300 animate-fade-in" style={{animationDelay: '0.3s'}}>
-                            <div className="flex items-end gap-1 h-32">
-                                {[30, 60, 45, 80, 50, 90, 70, 85, 60, 75, 55, 95].map((height, i) => (
-                                    <div 
-                                        key={i} 
-                                        className="flex-1 bg-gradient-to-t from-cyan-500/60 to-cyan-500/20 rounded-t animate-chart-grow hover:from-cyan-500/80 hover:to-cyan-500/40 transition-all duration-300"
-                                        style={{height: `${height}%`, animationDelay: `${i * 0.1}s`}}
-                                    ></div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Bottom Row - Circular & Stats */}
-                        <div className="flex gap-4 animate-fade-in" style={{animationDelay: '0.5s'}}>
-                            <div className="w-32 border border-cyan-500/30 rounded-lg p-4 bg-gray-900/50 backdrop-blur flex items-center justify-center hover:border-cyan-500/50 transition-all duration-300">
-                                <div className="relative w-20 h-20">
-                                    <div className="absolute inset-0 rounded-full border-4 border-cyan-500/30"></div>
-                                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-cyan-500 border-r-cyan-500 animate-spin-slow"></div>
-                                </div>
-                            </div>
-                            <div className="flex-1 border border-cyan-500/30 rounded-lg p-4 bg-gray-900/50 backdrop-blur hover:border-cyan-500/50 transition-all duration-300">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-1 flex-1 bg-cyan-500/40 rounded animate-progress-bar"></div>
-                                        <div className="h-1 w-8 bg-cyan-500/20 rounded"></div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-1 w-20 bg-cyan-500/30 rounded animate-progress-bar" style={{animationDelay: '0.3s'}}></div>
-                                        <div className="h-1 flex-1 bg-cyan-500/20 rounded"></div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-1 flex-1 bg-cyan-500/40 rounded animate-progress-bar" style={{animationDelay: '0.6s'}}></div>
-                                        <div className="h-1 w-12 bg-cyan-500/20 rounded"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div style={{ position: 'absolute', bottom: '28px', left: '32px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <img src={logo} alt="TrackHub" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
+                    <div>
+                        <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--white)' }}>TrackHub</span>
+                        <span style={{ fontSize: '12px', color: 'var(--slate)', marginLeft: '6px' }}>Track. Build. Improve.</span>
                     </div>
                 </div>
             </div>
 
-            {/* Right Side - Sign Up Form */}
-            <div className="flex-1 flex items-center justify-center p-4 md:p-8 lg:w-1/2">
-                <div className="w-full max-w-md">
-                    <div className="bg-gray-900/50 backdrop-blur border border-gray-800 rounded-2xl p-4 md:p-8 shadow-2xl">
-                        {/* Brand - Mobile Only */}
-                        <div className="lg:hidden flex items-center justify-center gap-3 mb-6">
-                            <img src={logo} alt="TrackHub Logo" className="w-10 h-10" />
-                            <span className="text-2xl font-bold text-white">TrackHub</span>
-                        </div>
-                        
-                        {/* Header */}
-                        <div className="mb-8 text-center">
-                            <h1 className="text-2xl md:text-3xl font-bold mb-2">Create an Account</h1>
-                            <p className="text-gray-400 text-sm">
-                                Already have an account?{" "}
-                                <Link to="/" className="text-cyan-500 hover:text-cyan-400 transition">
-                                    Sign In
-                                </Link>
-                            </p>
+            {/* Right panel — sign up form */}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
+                <div style={{ width: '100%', maxWidth: '360px' }}>
+                    {/* Mobile brand */}
+                    <div className="lg-hide-su" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '32px' }}>
+                        <style>{`.lg-hide-su { display: flex; } @media (min-width: 1024px) { .lg-hide-su { display: none !important; } }`}</style>
+                        <img src={logo} alt="TrackHub" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
+                        <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--white)' }}>TrackHub</span>
+                    </div>
+
+                    <div style={{
+                        background: 'var(--surface)', border: '1px solid var(--border)',
+                        borderRadius: '16px', padding: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
+                    }}>
+                        <div style={{ marginBottom: '24px' }}>
+                            <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--white)', margin: '0 0 6px' }}>Create account</h1>
+                            <p style={{ fontSize: '13px', color: 'var(--slate)', margin: 0 }}>Get started with TrackHub for free</p>
                         </div>
 
-                        {/* Error Message */}
                         {error && (
-                            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                            <div style={{ marginBottom: '16px', padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#F87171', fontSize: '13px' }}>
                                 {error}
                             </div>
                         )}
 
-                        {/* Form */}
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* Name Input */}
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                             <div>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    placeholder="Full Name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
-                                    required
-                                />
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>FULL NAME</label>
+                                <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Your name" required className="th-input" />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>EMAIL</label>
+                                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" required className="th-input" />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>PASSWORD</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        name="password" value={formData.password} onChange={handleChange}
+                                        placeholder="Create a password" required
+                                        className="th-input" style={{ paddingRight: '40px' }}
+                                    />
+                                    <button
+                                        type="button" onClick={() => setShowPassword(!showPassword)}
+                                        style={{
+                                            position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                                            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', padding: '2px',
+                                        }}
+                                    >
+                                        {showPassword ? (
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                                                <line x1="1" y1="1" x2="23" y2="23" />
+                                            </svg>
+                                        ) : (
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Email Input */}
-                            <div>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    placeholder="Email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
-                                    required
-                                />
-                            </div>
-
-                            {/* Password Input */}
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    name="password"
-                                    placeholder="Password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300 transition"
-                                    aria-label="Toggle password visibility"
+                            {/* Terms */}
+                            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                                <div
+                                    onClick={() => setFormData(prev => ({ ...prev, agreeToTerms: !prev.agreeToTerms }))}
+                                    style={{
+                                        width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0, marginTop: '1px',
+                                        border: `1.5px solid ${formData.agreeToTerms ? 'var(--cyan)' : 'var(--slate-dark)'}`,
+                                        background: formData.agreeToTerms ? 'var(--cyan)' : 'transparent',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        transition: 'all 0.15s', cursor: 'pointer',
+                                    }}
                                 >
-                                    {showPassword ? (
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                                            <line x1="1" y1="1" x2="23" y2="23" />
-                                        </svg>
-                                    ) : (
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                            <circle cx="12" cy="12" r="3" />
+                                    {formData.agreeToTerms && (
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--canvas)" strokeWidth="3.5">
+                                            <polyline points="20 6 9 17 4 12" />
                                         </svg>
                                     )}
-                                </button>
-                            </div>
-
-                            {/* Terms Checkbox */}
-                            <label className="flex items-start gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    name="agreeToTerms"
-                                    checked={formData.agreeToTerms}
-                                    onChange={handleChange}
-                                    className="w-4 h-4 mt-0.5 cursor-pointer accent-cyan-500"
-                                />
-                                <span className="text-sm text-gray-400">
-                                    I agree to the Terms & Conditions
+                                </div>
+                                <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} style={{ display: 'none' }} />
+                                <span style={{ fontSize: '12px', color: 'var(--slate)', lineHeight: '1.4' }}>
+                                    I agree to the{' '}
+                                    <a href="#" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>Terms of Service</a>
+                                    {' '}and{' '}
+                                    <a href="#" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>Privacy Policy</a>
                                 </span>
                             </label>
 
-                            {/* Sign Up Button */}
                             <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-3 bg-transparent border-2 border-cyan-500 text-cyan-500 rounded-lg font-semibold hover:bg-cyan-500 hover:text-white transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                type="submit" disabled={loading}
+                                style={{
+                                    width: '100%', padding: '11px',
+                                    border: 'none', borderRadius: '8px',
+                                    background: loading ? 'rgba(0,210,255,0.4)' : 'var(--cyan)',
+                                    color: 'var(--canvas)', fontSize: '14px', fontWeight: '700',
+                                    cursor: loading ? 'not-allowed' : 'pointer',
+                                    transition: 'opacity 0.15s', fontFamily: "'Inter', sans-serif",
+                                    marginTop: '4px',
+                                }}
+                                onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.85'; }}
+                                onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
                             >
-                                {loading ? "Creating Account..." : "Sign Up"}
+                                {loading ? "Creating account..." : "Create Account"}
                             </button>
-
-                            {/* Social Sign Up */}
-                            <div className="relative my-6">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-gray-900/50 text-gray-400">Or register with</span>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => handleSocialSignUp('Google')}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white hover:bg-gray-800 hover:border-gray-600 transition duration-300"
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                                    </svg>
-                                    <span>Google</span>
-                                </button>
-                                
-                                <button
-                                    type="button"
-                                    onClick={() => handleSocialSignUp('Apple')}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-800/80 border border-gray-700 rounded-lg text-white hover:bg-gray-800 hover:border-gray-600 transition duration-300"
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" fill="currentColor"/>
-                                    </svg>
-                                    <span>Apple</span>
-                                </button>
-                            </div>
                         </form>
+
+                        <p style={{ marginTop: '18px', textAlign: 'center', fontSize: '12px', color: 'var(--slate)' }}>
+                            Already have an account?{' '}
+                            <Link to="/" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: '600' }}>Sign In</Link>
+                        </p>
                     </div>
                 </div>
             </div>

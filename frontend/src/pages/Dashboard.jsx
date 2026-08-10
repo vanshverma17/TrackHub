@@ -1,16 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
+import DashboardLayout from "../components/DashboardLayout";
 import { projectsAPI, tasksAPI, timeEntriesAPI, todosAPI } from "../services/api";
 
 const Dashboard = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
     const TIME_TRACKER_STORAGE_KEY = 'trackhub.timeTracker';
-    const [searchQuery, setSearchQuery] = useState("");
-    const [greeting, setGreeting] = useState("");
     const [userName, setUserName] = useState("");
-    
+
     // Time Tracker State
     const [isTracking, setIsTracking] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
@@ -20,31 +15,18 @@ const Dashboard = () => {
     const [weeklyData, setWeeklyData] = useState([]);
     const [totalHoursToday, setTotalHoursToday] = useState(0);
     const [totalHoursWeek, setTotalHoursWeek] = useState(0);
-    
+
     // Stats State
     const [todaysTodosCompleted, setTodaysTodosCompleted] = useState(0);
     const [todaysTodosTotal, setTodaysTodosTotal] = useState(0);
     const [activeProjects, setActiveProjects] = useState(0);
 
-    // Mobile sidebar state
-    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
     const persistTimeTrackerState = (next) => {
-        try {
-            localStorage.setItem(TIME_TRACKER_STORAGE_KEY, JSON.stringify(next));
-        } catch {
-            // ignore
-        }
+        try { localStorage.setItem(TIME_TRACKER_STORAGE_KEY, JSON.stringify(next)); } catch { }
     };
-
     const clearTimeTrackerState = () => {
-        try {
-            localStorage.removeItem(TIME_TRACKER_STORAGE_KEY);
-        } catch {
-            // ignore
-        }
+        try { localStorage.removeItem(TIME_TRACKER_STORAGE_KEY); } catch { }
     };
-
     const restoreTimeTrackerState = () => {
         try {
             const raw = localStorage.getItem(TIME_TRACKER_STORAGE_KEY);
@@ -54,83 +36,48 @@ const Dashboard = () => {
             const restoredIsPaused = !!parsed?.isPaused;
             const restoredStartTime = typeof parsed?.startTime === 'number' ? parsed.startTime : null;
             const restoredElapsed = typeof parsed?.elapsedTime === 'number' ? parsed.elapsedTime : 0;
-
             setIsTracking(restoredIsTracking);
             setIsPaused(restoredIsPaused);
             setStartTime(restoredStartTime);
-
             if (restoredIsTracking && restoredStartTime) {
                 setElapsedTime(Date.now() - restoredStartTime);
             } else {
                 setElapsedTime(restoredElapsed);
             }
-        } catch {
-            // ignore
-        }
+        } catch { }
     };
 
     useEffect(() => {
-        // Get user name from localStorage
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         setUserName(user.name || 'User');
-
-        // Set greeting based on time
-        const hour = new Date().getHours();
-        if (hour >= 5 && hour < 12) {
-            setGreeting('Good Morning');
-        } else if (hour >= 12 && hour < 17) {
-            setGreeting('Good Afternoon');
-        } else if (hour >= 17 && hour < 21) {
-            setGreeting('Good Evening');
-        } else {
-            setGreeting('Good Night');
-        }
-        
-        // Load data
         fetchDashboardData();
-
-        // Restore timer state so it doesn't restart on page change
         restoreTimeTrackerState();
     }, []);
-    
-    // Timer effect
+
     useEffect(() => {
         let interval;
         if (isTracking) {
-            interval = setInterval(() => {
-                setElapsedTime(Date.now() - startTime);
-            }, 1000);
+            interval = setInterval(() => { setElapsedTime(Date.now() - startTime); }, 1000);
         }
         return () => clearInterval(interval);
     }, [isTracking, startTime]);
 
-    // Persist timer state changes
     useEffect(() => {
-        persistTimeTrackerState({
-            isTracking,
-            isPaused,
-            startTime,
-            elapsedTime,
-        });
+        persistTimeTrackerState({ isTracking, isPaused, startTime, elapsedTime });
     }, [isTracking, isPaused, startTime, elapsedTime]);
-    
+
     const fetchDashboardData = async () => {
         try {
-            // Fetch time entries for the week
             const now = new Date();
             const weekStart = new Date(now);
             weekStart.setDate(now.getDate() - now.getDay());
             weekStart.setHours(0, 0, 0, 0);
-
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekStart.getDate() + 6);
             weekEnd.setHours(23, 59, 59, 999);
 
             const [entriesRes, todosRes, tasksRes, projectsRes] = await Promise.all([
-                timeEntriesAPI.getAll({
-                    startDate: weekStart.toISOString(),
-                    endDate: weekEnd.toISOString(),
-                }),
+                timeEntriesAPI.getAll({ startDate: weekStart.toISOString(), endDate: weekEnd.toISOString() }),
                 todosAPI.getAll(),
                 tasksAPI.getAll(),
                 projectsAPI.getAll(),
@@ -140,9 +87,8 @@ const Dashboard = () => {
             setTimeEntries(entries);
             calculateWeeklyData(entries);
 
-            // Today's TODO counts (matches ToDo.jsx behaviour: tasks with no dueDate are shown for any day)
             const todos = todosRes.data || [];
-            const isSameDay = (date1, date2) => date1.toDateString() === date2.toDateString();
+            const isSameDay = (d1, d2) => d1.toDateString() === d2.toDateString();
             const todayDate = new Date();
             const todaysTodos = todos.filter((t) => {
                 if (!t?.dueDate) return true;
@@ -153,76 +99,53 @@ const Dashboard = () => {
             setTodaysTodosTotal(todaysTodos.length);
             setTodaysTodosCompleted(todaysTodos.filter((t) => !!t.completed).length);
 
-            // Active projects = projects that currently have >=1 task in ProjectTracker's "inProgress" column
             const tasks = tasksRes.data || [];
             const inProgressProjectIds = new Set(
-                tasks
-                    .filter((t) => (t?.status || "todo") === "inProgress")
+                tasks.filter((t) => (t?.status || "todo") === "inProgress")
                     .map((t) => (typeof t.project === "string" ? t.project : t?.project?._id))
                     .filter(Boolean)
             );
             const projects = projectsRes.data || [];
             const projectIds = new Set(projects.map((p) => p?._id).filter(Boolean));
             let active = 0;
-            inProgressProjectIds.forEach((id) => {
-                if (projectIds.has(id)) active += 1;
-            });
+            inProgressProjectIds.forEach((id) => { if (projectIds.has(id)) active += 1; });
             setActiveProjects(active);
-            
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         }
     };
-    
+
     const calculateWeeklyData = (entries) => {
         const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const weekData = daysOfWeek.map(day => ({ day, hours: 0 }));
-        
         const now = new Date();
-        const todayStart = new Date(now);
-        todayStart.setHours(0, 0, 0, 0);
-        const tomorrowStart = new Date(todayStart);
-        tomorrowStart.setDate(todayStart.getDate() + 1);
-        let todayHours = 0;
-        let weekHours = 0;
-        
+        const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
+        const tomorrowStart = new Date(todayStart); tomorrowStart.setDate(todayStart.getDate() + 1);
+        let todayHours = 0, weekHours = 0;
         entries.forEach(entry => {
             const entryDate = new Date(entry.date);
             const dayIndex = entryDate.getDay();
             weekData[dayIndex].hours += entry.hours || 0;
             weekHours += entry.hours || 0;
-            
-            if (entryDate >= todayStart && entryDate < tomorrowStart) {
-                todayHours += entry.hours || 0;
-            }
+            if (entryDate >= todayStart && entryDate < tomorrowStart) { todayHours += entry.hours || 0; }
         });
-        
         setWeeklyData(weekData);
         setTotalHoursToday(todayHours);
         setTotalHoursWeek(weekHours);
     };
-    
+
     const handleClockIn = () => {
         const now = Date.now();
-        setIsTracking(true);
-        setIsPaused(false);
-        setStartTime(now);
-        setElapsedTime(0);
+        setIsTracking(true); setIsPaused(false); setStartTime(now); setElapsedTime(0);
         persistTimeTrackerState({ isTracking: true, isPaused: false, startTime: now, elapsedTime: 0 });
     };
-    
+
     const handleClockOut = async () => {
-        setIsTracking(false);
-        setIsPaused(false);
-        
-        // Calculate hours
+        setIsTracking(false); setIsPaused(false);
         const hours = elapsedTime / (1000 * 60 * 60);
-        
-        // Save to backend
         try {
             const now = new Date();
             const startTimeObj = new Date(startTime);
-
             await timeEntriesAPI.create({
                 date: now.toISOString(),
                 startTime: startTimeObj.toTimeString().slice(0, 5),
@@ -230,428 +153,277 @@ const Dashboard = () => {
                 hours: parseFloat(hours.toFixed(2)),
                 description: 'Work session'
             });
-            
-            // Refresh data
             fetchDashboardData();
-        } catch (error) {
-            console.error('Error saving time entry:', error);
-        }
-
-        clearTimeTrackerState();
-        setElapsedTime(0);
-        setStartTime(null);
+        } catch (error) { console.error('Error saving time entry:', error); }
+        clearTimeTrackerState(); setElapsedTime(0); setStartTime(null);
     };
 
-    const handleDeleteTimeEntry = async (entryId) => {
-        try {
-            await timeEntriesAPI.delete(entryId);
-            setTimeEntries((prev) => prev.filter((e) => e?._id !== entryId));
-            fetchDashboardData();
-        } catch (error) {
-            console.error('Error deleting time entry:', error);
-        }
-    };
-
-    const handleClearRecentActivity = async () => {
-        try {
-            const ids = (timeEntries || []).map((e) => e?._id).filter(Boolean);
-            await Promise.all(ids.map((id) => timeEntriesAPI.delete(id)));
-            setTimeEntries([]);
-            fetchDashboardData();
-        } catch (error) {
-            console.error('Error clearing time entries:', error);
-        }
-    };
-    
     const formatTime = (ms) => {
         const totalSeconds = Math.floor(ms / 1000);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     };
 
-    const stats = [
-        { 
-            id: 1, 
-            label: "Tasks Completed", 
-            value: `${todaysTodosCompleted}/${todaysTodosTotal}`,
-            percentage: todaysTodosTotal > 0 ? Math.round((todaysTodosCompleted / todaysTodosTotal) * 100) : 0
+    // Re-order weekly data to start from MON
+    const orderedDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const chartData = orderedDays.map(day => weeklyData.find(d => d.day === day) || { day, hours: 0 });
+    const maxHours = Math.max(...chartData.map(d => d.hours), 1);
+    const todayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+
+    const metrics = [
+        {
+            id: 1,
+            icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                </svg>
+            ),
+            topLabel: 'TODAY',
+            value: todaysTodosCompleted,
+            valueSuffix: `/${todaysTodosTotal}`,
+            bottomLabel: 'Tasks Completed',
+            active: todaysTodosCompleted > 0,
+            isActive: true,
         },
-        { 
-            id: 2, 
-            label: "Hours Today", 
-            value: `${totalHoursToday.toFixed(1)}h`
+        {
+            id: 2,
+            icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                </svg>
+            ),
+            topLabel: 'ACTIVE',
+            value: totalHoursToday.toFixed(1),
+            valueSuffix: 'h',
+            bottomLabel: 'Hours Today',
+            active: isTracking,
         },
-        { 
-            id: 3, 
-            label: "Active Projects", 
-            value: activeProjects
-        }
+        {
+            id: 3,
+            icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                </svg>
+            ),
+            topLabel: 'THIS WEEK',
+            value: activeProjects,
+            valueSuffix: '',
+            bottomLabel: 'Active Projects',
+            active: false,
+        },
     ];
 
-    const todaysFocus = [
-        { id: 1, text: "Finalize Project Proposal", time: "9am-11:24", completed: false },
-        { id: 2, text: "Client Meeting", time: "", completed: false },
-        { id: 3, text: "Deep Work: Code Feature X", time: "2pm-4pm", completed: false }
-    ];
+    // Action footer
+    const ActionFooter = () => (
+        <div className="th-action-footer" style={{
+            display: 'flex', alignItems: 'center', gap: '16px',
+            padding: '14px 20px',
+        }}>
+            {/* Play/Pause button */}
+            <button
+                onClick={() => {
+                    if (!isTracking) {
+                        if (isPaused) { setIsTracking(true); setIsPaused(false); setStartTime(Date.now() - elapsedTime); }
+                        else handleClockIn();
+                    } else { setIsTracking(false); setIsPaused(true); }
+                }}
+                style={{
+                    width: '38px', height: '38px', borderRadius: '50%', border: '1px solid var(--border)',
+                    background: isTracking ? 'var(--cyan-dim)' : 'transparent',
+                    color: isTracking ? 'var(--cyan)' : 'var(--slate)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                    flexShrink: 0, transition: 'all 0.15s ease',
+                }}
+                aria-label={isTracking ? 'Pause' : 'Play'}
+            >
+                {isTracking ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                    </svg>
+                ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                )}
+            </button>
 
-    const habitStreaks = [
-        { id: 1, name: "Morning Yoga", days: 5, progress: 36, color: "cyan" },
-        { id: 2, name: "Meditate", days: 13, progress: 76, color: "orange" }
-    ];
-
-    const reminders = [
-        { type: "Upcoming", text: "Call Mom (3 PM)", color: "cyan" },
-        { type: "Reminder", text: "Pay Bills (Due Fri", color: "cyan" },
-        { type: "Reminder", text: "Pay Bills, (Due Fri", color: "cyan" },
-        { type: "Task", text: "Grocery Shopping", color: "gray" }
-    ];
-
-    return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden">
-            {/* Left Sidebar */}
-            <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
-
-            {/* Main Content */}
-            <div className="md:ml-64 lg:mr-80 flex flex-col h-screen overflow-hidden">
-                {/* Header */}
-                <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
-                    <div className="flex items-center gap-4">
-                        {/* Mobile hamburger */}
-                        <button
-                            onClick={() => setMobileSidebarOpen(true)}
-                            className="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300"
-                            aria-label="Open menu"
-                        >
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                        
-                        {/* Search bar - visible on desktop */}
-                        <div className="flex-1 max-w-md hidden md:block">
-                            <div className="relative">
-                                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <path d="m21 21-4.35-4.35"></path>
-                                </svg>
-                                <input
-                                    type="text"
-                                    placeholder="Search habits, or analytics..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
-                                />
-                            </div>
-                        </div>
-                        
-                        {/* Profile Icon */}
-                        <button 
-                            onClick={() => navigate('/profile', { state: { backgroundLocation: location } })}
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center hover:ring-2 hover:ring-cyan-500 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-offset-black transition cursor-pointer flex-shrink-0 ml-auto"
-                            aria-label="Open profile"
-                        >
-                            <span className="text-sm font-semibold text-white">{userName.charAt(0).toUpperCase()}</span>
-                        </button>
-                    </div>
+            {/* Session info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {isTracking ? 'Work Session' : isPaused ? 'Session Paused' : 'No active session'}
                 </div>
-
-                {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-                    {/* Greeting */}
-                    <div className="mb-6">
-                        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                            Welcome in, <span className="text-cyan-400">{userName}</span>
-                        </h1>
-                    </div>
-
-                    {/* Stats Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        {stats.map((stat) => (
-                            <div 
-                                key={stat.id} 
-                                className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 md:p-6"
-                            >
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{stat.label}</p>
-                                <div className="flex items-end justify-between">
-                                    <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-                                    {stat.percentage !== undefined && (
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center">
-                                                <span className="text-lg font-bold text-white">{stat.percentage}%</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Main Content Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Progress - Weekly Hours Bar Chart */}
-                        <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 md:p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Progress</h2>
-                            </div>
-                            <div className="mb-4">
-                                <p className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white">{totalHoursWeek.toFixed(1)}h</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Work Time this week</p>
-                            </div>
-                            <div className="flex items-end justify-between h-48 gap-2">
-                                {weeklyData.map((data, index) => {
-                                    const maxHours = Math.max(...weeklyData.map(d => d.hours), 1);
-                                    const heightPercent = (data.hours / maxHours) * 100;
-                                    const isToday = index === new Date().getDay();
-                                    
-                                    return (
-                                        <div key={data.day} className="flex-1 flex flex-col items-center gap-2">
-                                            <div className="w-full flex flex-col justify-end h-40">
-                                                <div 
-                                                    className={`w-full rounded-t-lg transition-all duration-500 ${
-                                                        isToday 
-                                                            ? 'bg-gradient-to-t from-yellow-400 to-yellow-500' 
-                                                            : data.hours > 0 
-                                                                ? 'bg-gray-300 dark:bg-gray-700' 
-                                                                : 'bg-gray-200 dark:bg-gray-800'
-                                                    }`}
-                                                    style={{ height: `${heightPercent}%`, minHeight: data.hours > 0 ? '8px' : '4px' }}
-                                                >
-                                                    {data.hours > 0 && (
-                                                        <div className="text-xs text-center text-gray-900 dark:text-white font-semibold mt-2">
-                                                            {data.hours.toFixed(1)}h
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-                                                {data.day.charAt(0)}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Time Tracker */}
-                        <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 md:p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Time Tracker</h2>
-                                <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                </button>
-                            </div>
-                            
-                            <div className="flex flex-col items-center justify-center">
-                                {/* Circular Timer */}
-                                <div className="relative w-48 h-48 mb-6">
-                                    <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 100 100">
-                                        {/* Background circle */}
-                                        <circle
-                                            cx="50"
-                                            cy="50"
-                                            r="42"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            className="text-gray-200 dark:text-gray-700"
-                                            strokeWidth="6"
-                                        />
-                                        {/* Progress circle */}
-                                        <circle
-                                            cx="50"
-                                            cy="50"
-                                            r="42"
-                                            fill="none"
-                                            stroke="url(#timerGradient)"
-                                            strokeWidth="6"
-                                            strokeDasharray={`${(elapsedTime / 1000 / 3600) * 26.4} 264`}
-                                            strokeLinecap="round"
-                                            className="transition-all duration-1000"
-                                        />
-                                        <defs>
-                                            <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                <stop offset="0%" stopColor="#fbbf24" />
-                                                <stop offset="100%" stopColor="#f59e0b" />
-                                            </linearGradient>
-                                        </defs>
-                                    </svg>
-                                    
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                        <div className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                                            {formatTime(elapsedTime)}
-                                        </div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Work Time</p>
-                                    </div>
-                                </div>
-                                
-                                {/* Control Buttons */}
-                                <div className="flex gap-4">
-                                    {!isTracking ? (
-                                        <button
-                                            onClick={() => {
-                                                if (isPaused) {
-                                                    setIsTracking(true);
-                                                    setIsPaused(false);
-                                                    setStartTime(Date.now() - elapsedTime);
-                                                } else {
-                                                    handleClockIn();
-                                                }
-                                            }}
-                                            className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full font-semibold hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 flex items-center gap-2 shadow-lg"
-                                        >
-                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M8 5v14l11-7z"/>
-                                            </svg>
-                                            {isPaused ? 'Resume' : 'Clock In'}
-                                        </button>
-                                    ) : (
-                                        <>
-                                            <button
-                                                onClick={() => {
-                                                    setIsTracking(false);
-                                                    setIsPaused(true);
-                                                }}
-                                                className="px-6 py-3 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-full font-semibold hover:bg-gray-400 dark:hover:bg-gray-600 transition-all duration-200 flex items-center gap-2"
-                                            >
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                                                </svg>
-                                                Pause
-                                            </button>
-                                            <button
-                                                onClick={handleClockOut}
-                                                className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-semibold hover:from-red-600 hover:to-pink-600 transition-all duration-200 flex items-center gap-2 shadow-lg"
-                                            >
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M6 6h12v12H6z"/>
-                                                </svg>
-                                                Clock Out
-                                            </button>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div style={{ fontSize: '11px', color: 'var(--slate)', marginTop: '2px' }}>
+                    TrackHub Workspace
                 </div>
             </div>
 
-            {/* Right Sidebar */}
-            <div className="hidden lg:block w-80 bg-gray-50 dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-800 p-4 md:p-6 space-y-6 overflow-y-auto fixed right-0 top-0 h-screen">
-                {/* Quick Actions */}
-                <div>
-                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                        <button 
-                            onClick={() => navigate('/todo')}
-                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-cyan-500 dark:hover:border-cyan-500 transition-all group"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center mb-2 group-hover:bg-cyan-500/20">
-                                <svg className="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                </svg>
+            {/* Timer display */}
+            <div className="th-timer" style={{ fontSize: '24px', flexShrink: 0 }}>
+                <span style={{ color: 'var(--cyan)' }}>{formatTime(elapsedTime).split(':')[0]}</span>
+                <span style={{ color: 'var(--slate)' }}>:</span>
+                <span style={{ color: 'var(--cyan)' }}>{formatTime(elapsedTime).split(':')[1]}</span>
+                <span style={{ color: 'var(--slate)' }}>:</span>
+                <span style={{ color: 'var(--cyan)' }}>{formatTime(elapsedTime).split(':')[2]}</span>
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <button
+                    onClick={handleClockOut}
+                    disabled={!isTracking && !isPaused}
+                    className="th-btn-ghost"
+                    style={{ opacity: (!isTracking && !isPaused) ? 0.4 : 1 }}
+                >
+                    CLOCK OUT
+                </button>
+                <button
+                    onClick={() => {
+                        if (!isTracking) {
+                            if (isPaused) { setIsTracking(true); setIsPaused(false); setStartTime(Date.now() - elapsedTime); }
+                            else handleClockIn();
+                        }
+                    }}
+                    disabled={isTracking}
+                    className="th-btn-primary"
+                    style={{ opacity: isTracking ? 0.4 : 1 }}
+                >
+                    CLOCK IN
+                </button>
+            </div>
+        </div>
+    );
+
+    return (
+        <DashboardLayout
+            title="Overview"
+            tagline="Stay focused. Track your progress."
+            footer={<ActionFooter />}
+        >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+                {/* Metrics Row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
+                    {metrics.map((metric) => (
+                        <div key={metric.id} className={`th-metric-card${metric.active ? ' active' : ''}`}>
+                            {/* Top row: icon + label */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                                <div className="th-icon-box" style={{ color: 'var(--cyan)' }}>
+                                    {metric.icon}
+                                </div>
+                                <span style={{
+                                    fontSize: '10px', fontWeight: '600', letterSpacing: '0.1em',
+                                    color: metric.active ? 'var(--cyan)' : 'var(--slate)',
+                                    display: 'flex', alignItems: 'center', gap: '4px'
+                                }}>
+                                    {metric.active && (
+                                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--cyan)', display: 'inline-block', flexShrink: 0 }} />
+                                    )}
+                                    {metric.topLabel}
+                                </span>
                             </div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">Tasks</p>
-                        </button>
-                        
-                        <button 
-                            onClick={() => navigate('/project-tracker')}
-                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-blue-500 dark:hover:border-blue-500 transition-all group"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mb-2 group-hover:bg-blue-500/20">
-                                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                </svg>
+                            {/* Value */}
+                            <div style={{ marginBottom: '8px' }}>
+                                <span style={{ fontSize: '40px', fontWeight: '800', color: 'var(--white)', letterSpacing: '-0.03em', lineHeight: '1' }}>
+                                    {metric.value}
+                                </span>
+                                {metric.valueSuffix && (
+                                    <span style={{ fontSize: '20px', fontWeight: '600', color: 'var(--slate)', marginLeft: '2px' }}>
+                                        {metric.valueSuffix}
+                                    </span>
+                                )}
                             </div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">Projects</p>
-                        </button>
-                        
-                        <button 
-                            onClick={() => navigate('/timetable')}
-                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-yellow-500 dark:hover:border-yellow-500 transition-all group"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center mb-2 group-hover:bg-yellow-500/20">
-                                <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                            {/* Bottom label */}
+                            <div style={{ fontSize: '12px', color: 'var(--slate)', fontWeight: '400' }}>
+                                {metric.bottomLabel}
                             </div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">Schedule</p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Weekly Activity Chart — full width */}
+                <div className="th-chart-block">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <div>
+                            <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--white)', margin: 0 }}>Weekly Activity</h2>
+                            <p style={{ fontSize: '11px', color: 'var(--slate)', marginTop: '3px' }}>
+                                {totalHoursWeek.toFixed(1)}h total this week
+                            </p>
+                        </div>
+                        <button style={{ background: 'none', border: 'none', color: 'var(--slate)', cursor: 'pointer', padding: '4px' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="5" r="1" fill="currentColor" />
+                                <circle cx="12" cy="12" r="1" fill="currentColor" />
+                                <circle cx="12" cy="19" r="1" fill="currentColor" />
+                            </svg>
                         </button>
-                        
-                        <button 
-                            onClick={() => navigate('/settings', { state: { backgroundLocation: location } })}
-                            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-purple-500 dark:hover:border-purple-500 transition-all group"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mb-2 group-hover:bg-purple-500/20">
-                                <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">Settings</p>
-                        </button>
+                    </div>
+
+                    {/* Chart */}
+                    <div style={{ height: '160px', display: 'flex', alignItems: 'flex-end', gap: '10px', paddingBottom: '4px', marginTop: '16px' }}>
+                        {chartData.map((data, idx) => {
+                            const heightPct = (data.hours / maxHours) * 100;
+                            const isToday = data.day === todayName;
+                            return (
+                                <div key={data.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', height: '100%' }}>
+                                    <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end' }}>
+                                        <div
+                                            style={{
+                                                width: '100%',
+                                                height: data.hours > 0 ? `${heightPct}%` : '4px',
+                                                minHeight: data.hours > 0 ? '8px' : '4px',
+                                                borderRadius: '4px 4px 0 0',
+                                                background: isToday ? 'var(--cyan)' : data.hours > 0 ? '#2A2D35' : '#1E2026',
+                                                boxShadow: isToday && data.hours > 0 ? '0 0 10px var(--cyan-glow)' : 'none',
+                                                transition: 'height 0.8s ease-out',
+                                            }}
+                                        />
+                                    </div>
+                                    <span style={{
+                                        fontSize: '10px', fontWeight: '500',
+                                        color: isToday ? 'var(--cyan)' : 'var(--slate)',
+                                        letterSpacing: '0.05em',
+                                    }}>
+                                        {data.day.toUpperCase()}
+                                    </span>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* Recent Activity */}
-                <div>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h3>
-                        {timeEntries.length > 0 && (
-                            <button
-                                onClick={handleClearRecentActivity}
-                                className="text-xs font-semibold text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition"
-                                aria-label="Clear all recent activity"
-                            >
-                                Clear All
-                            </button>
-                        )}
-                    </div>
-                    <div className="space-y-3">
-                        {timeEntries.slice(0, 5).map((entry, index) => (
-                            <div key={index} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                                <div className="flex items-start justify-between mb-1">
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                        {entry.description || 'Work Session'}
-                                    </p>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs text-cyan-500 font-semibold">{entry.hours}h</span>
-                                        {entry?._id && (
-                                            <button
-                                                onClick={() => handleDeleteTimeEntry(entry._id)}
-                                                className="text-gray-400 hover:text-red-500 transition"
-                                                aria-label="Delete time entry"
-                                                title="Delete"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        )}
+                {timeEntries.length > 0 && (
+                    <div className="th-card" style={{ padding: '20px' }}>
+                        <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--white)', marginBottom: '14px' }}>
+                            Recent Sessions
+                        </h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {timeEntries.slice(0, 4).map((entry, idx) => (
+                                <div key={idx} style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    padding: '10px 12px', borderRadius: '8px', background: 'var(--canvas)',
+                                    border: '1px solid var(--border)',
+                                }}>
+                                    <div>
+                                        <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--white)' }}>
+                                            {entry.description || 'Work Session'}
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: 'var(--slate)', marginTop: '2px' }}>
+                                            {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {entry.startTime}–{entry.endTime}
+                                        </div>
                                     </div>
+                                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--cyan)' }}>
+                                        {entry.hours}h
+                                    </span>
                                 </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                    {' • '}
-                                    {entry.startTime} - {entry.endTime}
-                                </p>
-                            </div>
-                        ))}
-                        {timeEntries.length === 0 && (
-                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p className="text-sm">No recent activity</p>
-                            </div>
-                        )}
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
-        </div>
+        </DashboardLayout>
     );
 };
 

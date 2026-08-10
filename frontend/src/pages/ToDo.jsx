@@ -1,10 +1,8 @@
-
 import { useState, useRef, useEffect } from "react";
-import Sidebar from "../components/Sidebar";
+import DashboardLayout from "../components/DashboardLayout";
 import { todosAPI } from "../services/api";
 
 const ToDo = () => {
-    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [tasks, setTasks] = useState([]);
     const [newTaskText, setNewTaskText] = useState("");
@@ -13,24 +11,17 @@ const ToDo = () => {
     const [calendarMonth, setCalendarMonth] = useState(new Date());
     const [loading, setLoading] = useState(false);
 
-    // Fetch tasks on component mount
-    useEffect(() => {
-        fetchTasks();
-    }, []);
+    useEffect(() => { fetchTasks(); }, []);
 
     const fetchTasks = async () => {
         setLoading(true);
         try {
             const response = await todosAPI.getAll();
             setTasks(response.data);
-        } catch (error) {
-            console.error('Error fetching tasks:', error);
-        } finally {
-            setLoading(false);
-        }
+        } catch (error) { console.error('Error fetching tasks:', error); }
+        finally { setLoading(false); }
     };
 
-    // Generate dates for the scrollable date picker
     const generateDates = () => {
         const dates = [];
         const today = new Date();
@@ -41,22 +32,10 @@ const ToDo = () => {
         }
         return dates;
     };
-
     const dates = generateDates();
 
-    const formatDate = (date) => {
-        const options = { weekday: 'short', month: 'short', day: 'numeric' };
-        return date.toLocaleDateString('en-US', options);
-    };
-
-    const isToday = (date) => {
-        const today = new Date();
-        return date.toDateString() === today.toDateString();
-    };
-
-    const isSameDay = (date1, date2) => {
-        return date1.toDateString() === date2.toDateString();
-    };
+    const isToday = (date) => date.toDateString() === new Date().toDateString();
+    const isSameDay = (d1, d2) => d1.toDateString() === d2.toDateString();
 
     const visibleTasks = tasks.filter((task) => {
         if (!task?.dueDate) return true;
@@ -65,32 +44,25 @@ const ToDo = () => {
         return isSameDay(due, selectedDate);
     });
 
-    const scrollDates = (direction) => {
+    const scrollDates = (dir) => {
         if (dateScrollRef.current) {
-            const scrollAmount = direction === 'left' ? -200 : 200;
-            dateScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            dateScrollRef.current.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
         }
     };
 
     const toggleTask = async (id) => {
         try {
             const task = tasks.find(t => t._id === id);
-            const response = await todosAPI.update(id, {
-                completed: !task.completed
-            });
+            const response = await todosAPI.update(id, { completed: !task.completed });
             setTasks(tasks.map(t => t._id === id ? response.data : t));
-        } catch (error) {
-            console.error('Error toggling task:', error);
-        }
+        } catch (error) { console.error('Error toggling task:', error); }
     };
 
     const deleteTask = async (id) => {
         try {
             await todosAPI.delete(id);
             setTasks(tasks.filter(task => task._id !== id));
-        } catch (error) {
-            console.error('Error deleting task:', error);
-        }
+        } catch (error) { console.error('Error deleting task:', error); }
     };
 
     const addTask = async () => {
@@ -103,10 +75,7 @@ const ToDo = () => {
                 });
                 setTasks([...tasks, response.data]);
                 setNewTaskText("");
-            } catch (error) {
-                console.error('Error adding task:', error);
-                console.error('Add task response:', error?.response?.data);
-            }
+            } catch (error) { console.error('Error adding task:', error); }
         }
     };
 
@@ -117,283 +86,287 @@ const ToDo = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden">
-            <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
-            <div className="md:ml-64 flex flex-col h-screen">
-                {/* Header */}
-                <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center gap-3 mb-3 md:mb-4">
-                        <button
-                            onClick={() => setMobileSidebarOpen(true)}
-                            className="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300"
-                            aria-label="Open menu"
-                        >
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                        <h1 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-white">TODO List</h1>
-                    </div>
-                    
-                    {/* Scrollable Date Picker with Arrows */}
-                    <div className="flex items-center gap-2">
-                        {/* Left Arrow */}
-                        <button
-                            onClick={() => scrollDates('left')}
-                            className="flex-shrink-0 p-1.5 md:p-2 bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200"
-                            aria-label="Scroll left"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
+        <DashboardLayout title="To-Do List" tagline="Organize and conquer your day.">
+            {/* Date Strip */}
+            <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {/* Left arrow */}
+                    <button
+                        onClick={() => scrollDates('left')}
+                        aria-label="Scroll left"
+                        style={{
+                            width: '32px', height: '32px', borderRadius: '8px',
+                            border: '1px solid var(--border)', background: 'transparent',
+                            color: 'var(--slate)', cursor: 'pointer', flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--cyan)'; e.currentTarget.style.color = 'var(--cyan)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--slate)'; }}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
 
-                        {/* Date Picker */}
-                        <div 
-                            ref={dateScrollRef}
-                            className="overflow-x-auto overflow-y-hidden flex-1" 
-                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                        >
-                            <style jsx>{`
-                                div::-webkit-scrollbar {
-                                    display: none;
-                                }
-                            `}</style>
-                            <div className="flex gap-2 md:gap-3 pb-2">
-                                {dates.map((date, index) => (
+                    {/* Scrollable dates */}
+                    <div
+                        ref={dateScrollRef}
+                        style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                    >
+                        <div style={{ display: 'flex', gap: '8px', paddingBottom: '4px' }}>
+                            {dates.map((date, idx) => {
+                                const selected = isSameDay(date, selectedDate);
+                                const today = isToday(date);
+                                return (
                                     <button
-                                        key={index}
+                                        key={idx}
                                         onClick={() => setSelectedDate(date)}
-                                        className={`flex-shrink-0 px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg border transition-all duration-200 md:min-w-[100px] min-w-[70px] ${
-                                            isSameDay(date, selectedDate)
-                                                ? 'bg-cyan-500 border-cyan-500 text-white'
-                                                : isToday(date)
-                                                ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400'
-                                                : 'bg-gray-100 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
-                                        }`}
+                                        style={{
+                                            flexShrink: 0, minWidth: '60px', padding: '8px 10px',
+                                            borderRadius: '8px', border: `1px solid ${selected ? 'var(--cyan)' : today ? 'rgba(0,210,255,0.3)' : 'var(--border)'}`,
+                                            background: selected ? 'var(--cyan)' : today ? 'var(--cyan-dim)' : 'var(--surface)',
+                                            color: selected ? 'var(--canvas)' : today ? 'var(--cyan)' : 'var(--slate)',
+                                            cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s',
+                                        }}
                                     >
-                                        <div className="text-xs">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                                        <div className="text-base md:text-lg font-semibold">{date.getDate()}</div>
-                                        <div className="text-xs">{date.toLocaleDateString('en-US', { month: 'short' })}</div>
+                                        <div style={{ fontSize: '10px', fontWeight: '500', letterSpacing: '0.05em' }}>
+                                            {date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
+                                        </div>
+                                        <div style={{ fontSize: '18px', fontWeight: '700', lineHeight: '1.1', margin: '2px 0' }}>
+                                            {date.getDate()}
+                                        </div>
+                                        <div style={{ fontSize: '10px', fontWeight: '400' }}>
+                                            {date.toLocaleDateString('en-US', { month: 'short' })}
+                                        </div>
                                     </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Right arrow */}
+                    <button
+                        onClick={() => scrollDates('right')}
+                        aria-label="Scroll right"
+                        style={{
+                            width: '32px', height: '32px', borderRadius: '8px',
+                            border: '1px solid var(--border)', background: 'transparent',
+                            color: 'var(--slate)', cursor: 'pointer', flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--cyan)'; e.currentTarget.style.color = 'var(--cyan)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--slate)'; }}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {/* Main content + Mini calendar */}
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                {/* Task list */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    {/* Date heading */}
+                    <div style={{ marginBottom: '16px' }}>
+                        <h2 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--white)' }}>
+                            {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        </h2>
+                        <p style={{ fontSize: '12px', color: 'var(--slate)', marginTop: '3px' }}>
+                            {visibleTasks.filter(t => !t.completed).length} task{visibleTasks.filter(t => !t.completed).length !== 1 ? 's' : ''} remaining
+                        </p>
+                    </div>
+
+                    {/* Add task input */}
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                        <input
+                            type="text"
+                            value={newTaskText}
+                            onChange={e => setNewTaskText(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && addTask()}
+                            placeholder="Add a new task..."
+                            className="th-input"
+                        />
+                        <button
+                            onClick={addTask}
+                            className="th-btn-primary"
+                            style={{ flexShrink: 0, padding: '10px 18px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', textTransform: 'none', letterSpacing: '0' }}
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            Add Task
+                        </button>
+                    </div>
+
+                    {/* Task list container */}
+                    <div className="th-card" style={{ overflow: 'hidden' }}>
+                        {loading ? (
+                            <div style={{ padding: '48px', textAlign: 'center' }}>
+                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--cyan)', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }} />
+                                <p style={{ fontSize: '13px', color: 'var(--slate)' }}>Loading tasks...</p>
+                            </div>
+                        ) : visibleTasks.length === 0 ? (
+                            <div style={{ padding: '48px', textAlign: 'center' }}>
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--slate)" strokeWidth="1.5" style={{ margin: '0 auto 12px', display: 'block', opacity: 0.5 }}>
+                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <p style={{ fontSize: '13px', color: 'var(--slate)' }}>No tasks for this day. Add one above!</p>
+                            </div>
+                        ) : (
+                            <div>
+                                {visibleTasks.map((task, idx) => (
+                                    <div
+                                        key={task._id}
+                                        onMouseEnter={() => setHoveredTaskId(task._id)}
+                                        onMouseLeave={() => setHoveredTaskId(null)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '12px',
+                                            padding: '14px 16px',
+                                            borderBottom: idx < visibleTasks.length - 1 ? '1px solid var(--border)' : 'none',
+                                            background: hoveredTaskId === task._id ? 'rgba(0,210,255,0.03)' : 'transparent',
+                                            transition: 'background 0.15s',
+                                        }}
+                                    >
+                                        {/* Custom checkbox */}
+                                        <label style={{ cursor: 'pointer', flexShrink: 0 }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={task.completed}
+                                                onChange={() => toggleTask(task._id)}
+                                                style={{ display: 'none' }}
+                                            />
+                                            <div style={{
+                                                width: '18px', height: '18px', borderRadius: '4px',
+                                                border: `2px solid ${task.completed ? 'var(--cyan)' : 'var(--slate-dark)'}`,
+                                                background: task.completed ? 'var(--cyan)' : 'transparent',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                transition: 'all 0.15s',
+                                            }}>
+                                                {task.completed && (
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--canvas)" strokeWidth="3">
+                                                        <polyline points="20 6 9 17 4 12" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                        </label>
+
+                                        {/* Task text */}
+                                        <span style={{
+                                            flex: 1, fontSize: '13px', fontWeight: '400',
+                                            color: task.completed ? 'var(--slate)' : 'var(--white)',
+                                            textDecoration: task.completed ? 'line-through' : 'none',
+                                            transition: 'all 0.15s',
+                                        }}>
+                                            {task.title ?? task.text}
+                                        </span>
+
+                                        {/* Delete button */}
+                                        <button
+                                            onClick={() => deleteTask(task._id)}
+                                            style={{
+                                                background: 'none', border: 'none', cursor: 'pointer',
+                                                color: 'var(--slate)', padding: '4px', borderRadius: '4px',
+                                                opacity: hoveredTaskId === task._id ? 1 : 0,
+                                                transition: 'opacity 0.15s, color 0.15s',
+                                                display: 'flex', alignItems: 'center',
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.color = '#ff4d4d'}
+                                            onMouseLeave={e => e.currentTarget.style.color = 'var(--slate)'}
+                                        >
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 ))}
                             </div>
-                        </div>
-
-                        {/* Right Arrow */}
-                        <button
-                            onClick={() => scrollDates('right')}
-                            className="flex-shrink-0 p-1.5 md:p-2 bg-gray-100 dark:bg-gray-800/50 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200"
-                            aria-label="Scroll right"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
+                        )}
                     </div>
                 </div>
 
-                {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                    <div className="flex flex-col md:flex-row gap-6">
-                        {/* Main Content */}
-                        <div className="flex-1 w-full md:max-w-4xl">
-                            {/* Current Date Display */}
-                            <div className="mb-4 md:mb-6">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-300">
-                                    {selectedDate.toLocaleDateString('en-US', { 
-                                        weekday: 'long', 
-                                        year: 'numeric', 
-                                        month: 'long', 
-                                        day: 'numeric' 
-                                    })}
-                                </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-500 mt-1">{visibleTasks.filter(t => !t.completed).length} tasks remaining</p>
-                            </div>
+                {/* Mini Calendar */}
+                <div className="th-card hidden lg:block" style={{ flexShrink: 0, width: '220px', padding: '16px', position: 'sticky', top: 0 }}>
+                    {/* Month header */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--white)' }}>
+                            {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                        </span>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                            {[{ dir: -1, icon: '<' }, { dir: 1, icon: '>' }].map(({ dir, icon }) => (
+                                <button
+                                    key={dir}
+                                    onClick={() => changeMonth(dir)}
+                                    style={{
+                                        width: '22px', height: '22px', border: 'none',
+                                        background: 'transparent', color: 'var(--slate)', cursor: 'pointer',
+                                        borderRadius: '4px', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.color = 'var(--white)'}
+                                    onMouseLeave={e => e.currentTarget.style.color = 'var(--slate)'}
+                                >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        {dir === -1
+                                            ? <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                                            : <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+                                        }
+                                    </svg>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-                            {/* Add New Task */}
-                            <div className="mb-4 md:mb-6">
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                    <input
-                                        type="text"
-                                        value={newTaskText}
-                                        onChange={(e) => setNewTaskText(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && addTask()}
-                                        placeholder="Add a new task..."
-                                        className="flex-1 w-full px-3 py-2.5 md:px-4 md:py-3 bg-gray-100 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm md:text-base"
-                                    />
+                    {/* Day headers */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', marginBottom: '6px' }}>
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                            <div key={i} style={{ textAlign: 'center', fontSize: '10px', color: 'var(--slate)', fontWeight: '600', padding: '2px' }}>
+                                {d}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Calendar days */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+                        {(() => {
+                            const year = calendarMonth.getFullYear();
+                            const month = calendarMonth.getMonth();
+                            const firstDay = new Date(year, month, 1).getDay();
+                            const daysInMonth = new Date(year, month + 1, 0).getDate();
+                            const cells = [];
+                            for (let i = 0; i < firstDay; i++) cells.push(<div key={`e-${i}`} />);
+                            for (let day = 1; day <= daysInMonth; day++) {
+                                const date = new Date(year, month, day);
+                                const isSelected = isSameDay(date, selectedDate);
+                                const isT = isToday(date);
+                                cells.push(
                                     <button
-                                        onClick={addTask}
-                                        className="w-full sm:w-auto px-4 py-2.5 md:px-6 md:py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition duration-200 flex items-center justify-center gap-2 text-sm md:text-base"
+                                        key={day}
+                                        onClick={() => setSelectedDate(date)}
+                                        style={{
+                                            aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: '11px', borderRadius: '4px', border: 'none', cursor: 'pointer',
+                                            fontWeight: isSelected || isT ? '600' : '400',
+                                            background: isSelected ? 'var(--cyan)' : isT ? 'var(--cyan-dim)' : 'transparent',
+                                            color: isSelected ? 'var(--canvas)' : isT ? 'var(--cyan)' : 'var(--slate)',
+                                            transition: 'all 0.1s',
+                                        }}
+                                        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--border)'; }}
+                                        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isT ? 'var(--cyan-dim)' : 'transparent'; }}
                                     >
-                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add Task
+                                        {day}
                                     </button>
-                                </div>
-                            </div>
-
-                            {/* Tasks List */}
-                            <div className="bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-xl md:rounded-2xl overflow-hidden">
-                                {loading ? (
-                                    <div className="p-12 text-center text-gray-600 dark:text-gray-500">
-                                        <div className="animate-spin mx-auto mb-4 h-12 w-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full"></div>
-                                        <p>Loading tasks...</p>
-                                    </div>
-                                ) : visibleTasks.length === 0 ? (
-                                    <div className="p-12 text-center text-gray-600 dark:text-gray-500">
-                                        <svg className="mx-auto mb-4 opacity-50" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                                        </svg>
-                                        <p>No tasks yet. Add one to get started!</p>
-                                    </div>
-                                ) : (
-                                    <div className="divide-y divide-gray-200 dark:divide-gray-800">
-                                        {visibleTasks.map((task) => (
-                                            <div
-                                                key={task._id}
-                                                onMouseEnter={() => setHoveredTaskId(task._id)}
-                                                onMouseLeave={() => setHoveredTaskId(null)}
-                                                className="flex items-center gap-3 px-4 py-3 md:px-6 md:py-4 hover:bg-gray-200/60 dark:hover:bg-gray-800/50 transition-all duration-200 group"
-                                            >
-                                                {/* Checkbox */}
-                                                <label className="flex items-center cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={task.completed}
-                                                        onChange={() => toggleTask(task._id)}
-                                                        className="w-5 h-5 rounded border-2 border-gray-400 dark:border-gray-600 bg-transparent checked:bg-cyan-500 checked:border-cyan-500 cursor-pointer transition-all duration-200 appearance-none flex items-center justify-center"
-                                                        style={{
-                                                            backgroundImage: task.completed ? 
-                                                                `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E")` 
-                                                                : 'none',
-                                                            backgroundSize: '80%',
-                                                            backgroundPosition: 'center',
-                                                            backgroundRepeat: 'no-repeat'
-                                                        }}
-                                                    />
-                                                </label>
-
-                                                {/* Task Text */}
-                                                <span className={`flex-1 text-base transition-all duration-200 ${
-                                                    task.completed 
-                                                        ? 'text-gray-500 line-through' 
-                                                        : 'text-gray-900 dark:text-white'
-                                                }`}>
-                                                    {task.title ?? task.text}
-                                                </span>
-
-                                                {/* Delete Button - Only visible on hover */}
-                                                <button
-                                                    onClick={() => deleteTask(task._id)}
-                                                    className={`p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200 ${
-                                                        hoveredTaskId === task._id ? 'opacity-100 visible' : 'opacity-0 invisible'
-                                                    }`}
-                                                >
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Mini Calendar Widget - Hidden on mobile */}
-                        <div className="hidden lg:block flex-shrink-0 w-64">
-                            <div className="bg-gray-100/70 dark:bg-gray-900/50 border border-gray-200 dark:border-cyan-500/30 rounded-xl p-5 sticky top-0">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                        {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                                    </h3>
-                                    <div className="flex gap-1">
-                                        <button
-                                            onClick={() => changeMonth(-1)}
-                                            className="p-1 hover:bg-gray-300 dark:hover:bg-gray-800 rounded transition-colors"
-                                            aria-label="Previous month"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => changeMonth(1)}
-                                            className="p-1 hover:bg-gray-300 dark:hover:bg-gray-800 rounded transition-colors"
-                                            aria-label="Next month"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                {/* Calendar Grid */}
-                                <div className="space-y-2">
-                                    {/* Day Headers */}
-                                    <div className="grid grid-cols-7 gap-1 mb-2">
-                                        {['Sun', 'Mon', 'Tu', 'Wed', 'Th', 'Fri', 'Sat'].map(day => (
-                                            <div key={day} className="text-center text-xs text-gray-600 dark:text-gray-500 font-medium">
-                                                {day}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    
-                                    {/* Calendar Days */}
-                                    <div className="grid grid-cols-7 gap-1">
-                                        {(() => {
-                                            const year = calendarMonth.getFullYear();
-                                            const month = calendarMonth.getMonth();
-                                            const firstDay = new Date(year, month, 1).getDay();
-                                            const daysInMonth = new Date(year, month + 1, 0).getDate();
-                                            const days = [];
-                                            
-                                            // Empty cells for days before month starts
-                                            for (let i = 0; i < firstDay; i++) {
-                                                days.push(<div key={`empty-${i}`} className="aspect-square"></div>);
-                                            }
-                                            
-                                            // Days of the month
-                                            for (let day = 1; day <= daysInMonth; day++) {
-                                                const date = new Date(year, month, day);
-                                                const isSelected = isSameDay(date, selectedDate);
-                                                const isTodayDate = isToday(date);
-                                                
-                                                days.push(
-                                                    <button
-                                                        key={day}
-                                                        onClick={() => setSelectedDate(date)}
-                                                        className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-all ${
-                                                            isSelected
-                                                                ? 'bg-cyan-500 text-white font-semibold'
-                                                                : isTodayDate
-                                                                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                                                                : 'text-gray-700 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-800/50'
-                                                        }`}
-                                                    >
-                                                        {day}
-                                                    </button>
-                                                );
-                                            }
-                                            
-                                            return days;
-                                        })()}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                                );
+                            }
+                            return cells;
+                        })()}
                     </div>
                 </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
-}
+};
 
 export default ToDo;

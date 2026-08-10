@@ -1,157 +1,95 @@
 import { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
+import DashboardLayout from "../components/DashboardLayout";
 import { projectsAPI, tasksAPI } from "../services/api";
 
 const ProjectTracker = () => {
     const colorOptions = {
-        blue: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30', solid: 'bg-blue-500', selectedBg: 'bg-blue-500/30', selectedBorder: 'border-blue-500' },
-        green: { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30', solid: 'bg-green-500', selectedBg: 'bg-green-500/30', selectedBorder: 'border-green-500' },
-        red: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30', solid: 'bg-red-500', selectedBg: 'bg-red-500/30', selectedBorder: 'border-red-500' },
-        yellow: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30', solid: 'bg-yellow-500', selectedBg: 'bg-yellow-500/30', selectedBorder: 'border-yellow-500' },
-        purple: { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30', solid: 'bg-purple-500', selectedBg: 'bg-purple-500/30', selectedBorder: 'border-purple-500' },
-        orange: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30', solid: 'bg-orange-500', selectedBg: 'bg-orange-500/30', selectedBorder: 'border-orange-500' },
-        teal: { bg: 'bg-teal-500/20', text: 'text-teal-400', border: 'border-teal-500/30', solid: 'bg-teal-500', selectedBg: 'bg-teal-500/30', selectedBorder: 'border-teal-500' },
-        gray: { bg: 'bg-gray-500/20', text: 'text-gray-400', border: 'border-gray-500/30', solid: 'bg-gray-500', selectedBg: 'bg-gray-500/30', selectedBorder: 'border-gray-500' },
-        indigo: { bg: 'bg-indigo-500/20', text: 'text-indigo-400', border: 'border-indigo-500/30', solid: 'bg-indigo-500', selectedBg: 'bg-indigo-500/30', selectedBorder: 'border-indigo-500' },
+        blue: { bg: 'rgba(59,130,246,0.12)', text: '#60A5FA', border: 'rgba(59,130,246,0.25)' },
+        green: { bg: 'rgba(34,197,94,0.12)', text: '#4ADE80', border: 'rgba(34,197,94,0.25)' },
+        red: { bg: 'rgba(239,68,68,0.12)', text: '#F87171', border: 'rgba(239,68,68,0.25)' },
+        yellow: { bg: 'rgba(234,179,8,0.12)', text: '#FACC15', border: 'rgba(234,179,8,0.25)' },
+        purple: { bg: 'rgba(168,85,247,0.12)', text: '#C084FC', border: 'rgba(168,85,247,0.25)' },
+        orange: { bg: 'rgba(249,115,22,0.12)', text: '#FB923C', border: 'rgba(249,115,22,0.25)' },
+        teal: { bg: 'rgba(20,184,166,0.12)', text: '#2DD4BF', border: 'rgba(20,184,166,0.25)' },
+        gray: { bg: 'rgba(107,114,128,0.12)', text: '#9CA3AF', border: 'rgba(107,114,128,0.25)' },
+        indigo: { bg: 'rgba(99,102,241,0.12)', text: '#818CF8', border: 'rgba(99,102,241,0.25)' },
+        cyan: { bg: 'rgba(0,210,255,0.1)', text: 'var(--cyan)', border: 'rgba(0,210,255,0.25)' },
+    };
+
+    const solidColors = {
+        blue: '#3B82F6', green: '#22C55E', red: '#EF4444', yellow: '#EAB308',
+        purple: '#A855F7', orange: '#F97316', teal: '#14B8A6', gray: '#6B7280',
+        indigo: '#6366F1', cyan: '#00D2FF',
     };
 
     const [searchQuery, setSearchQuery] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [modalColumn, setModalColumn] = useState(null);
     const [editingTask, setEditingTask] = useState(null);
-    const [formData, setFormData] = useState({
-        title: "",
-        description: "",
-        tag: "",
-        tagColor: "blue",
-        startDate: "",
-        dueDate: ""
-    });
-    
-    const [tasks, setTasks] = useState({
-        todo: [],
-        inProgress: [],
-        done: []
-    });
-
+    const [formData, setFormData] = useState({ title: "", description: "", tag: "", tagColor: "cyan", startDate: "", dueDate: "" });
+    const [tasks, setTasks] = useState({ todo: [], inProgress: [], done: [] });
     const [activeProjectId, setActiveProjectId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-    // Auto-clear error after 5 seconds
     useEffect(() => {
-        if (error) {
-            const timer = setTimeout(() => setError(""), 5000);
-            return () => clearTimeout(timer);
-        }
+        if (error) { const t = setTimeout(() => setError(""), 5000); return () => clearTimeout(t); }
     }, [error]);
 
     useEffect(() => {
         const init = async () => {
-            setLoading(true);
-            setError("");
+            setLoading(true); setError("");
             try {
                 const projectsRes = await projectsAPI.getAll();
                 let project = projectsRes.data?.[0];
                 if (!project) {
-                    const created = await projectsAPI.create({
-                        name: "My Project",
-                        description: "",
-                        color: "blue"
-                    });
+                    const created = await projectsAPI.create({ name: "My Project", description: "", color: "blue" });
                     project = created.data;
                 }
-
                 setActiveProjectId(project._id);
-
                 const tasksRes = await tasksAPI.getAll({ project: project._id });
                 const board = { todo: [], inProgress: [], done: [] };
                 (tasksRes.data || []).forEach((t) => {
                     const status = t.status || "todo";
-                    const uiTask = {
-                        ...t,
-                        id: t._id,
-                        // keep date values as ISO/Date strings; UI formats them
-                    };
+                    const uiTask = { ...t, id: t._id };
                     if (board[status]) board[status].push(uiTask);
                 });
                 setTasks(board);
             } catch (e) {
                 console.error("Failed to load project board:", e);
                 setError(e?.response?.data?.error || "Failed to load board");
-            } finally {
-                setLoading(false);
-            }
+            } finally { setLoading(false); }
         };
-
         init();
     }, []);
 
+    const [draggingTaskId, setDraggingTaskId] = useState(null);
     const [draggedTask, setDraggedTask] = useState(null);
     const [draggedFrom, setDraggedFrom] = useState(null);
-    const [draggingTaskId, setDraggingTaskId] = useState(null);
 
     const handleDragStart = (e, task, column) => {
         e.dataTransfer.effectAllowed = "move";
-
-        // Some browsers (notably Firefox) require a text/plain payload
-        // for drag to properly initiate on first attempt.
         const payload = JSON.stringify({ taskId: task.id, sourceColumn: column });
         e.dataTransfer.setData("text/plain", payload);
         e.dataTransfer.setData("application/json", payload);
         e.dataTransfer.setData("taskId", task.id);
         e.dataTransfer.setData("sourceColumn", column);
-
-        // Improve visibility of the drag preview
-        try {
-            e.dataTransfer.setDragImage(e.currentTarget, 24, 24);
-        } catch {
-            // ignore if browser disallows custom drag image
-        }
-
-        setDraggingTaskId(task.id);
-        setDraggedTask(task);
-        setDraggedFrom(column);
+        try { e.dataTransfer.setDragImage(e.currentTarget, 24, 24); } catch { }
+        setDraggingTaskId(task.id); setDraggedTask(task); setDraggedFrom(column);
     };
 
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-    };
+    const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
 
     const handleDrop = async (e, column) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
+        e.preventDefault(); e.stopPropagation();
         let taskId = e.dataTransfer.getData("taskId");
         let sourceColumn = e.dataTransfer.getData("sourceColumn");
-
         if (!taskId || !sourceColumn) {
             const text = e.dataTransfer.getData("text/plain");
-            if (text) {
-                try {
-                    const parsed = JSON.parse(text);
-                    taskId = parsed?.taskId;
-                    sourceColumn = parsed?.sourceColumn;
-                } catch {
-                    // ignore
-                }
-            }
+            if (text) { try { const p = JSON.parse(text); taskId = p?.taskId; sourceColumn = p?.sourceColumn; } catch { } }
         }
-        
-        console.log("Drop event:", { taskId, sourceColumn, targetColumn: column });
-        
         if (taskId && sourceColumn) {
-            if (sourceColumn === column) {
-                // Same column, just reset drag state
-                setDraggedTask(null);
-                setDraggedFrom(null);
-                setDraggingTaskId(null);
-                return;
-            }
-            
-            // optimistic UI move
+            if (sourceColumn === column) { setDraggedTask(null); setDraggedFrom(null); setDraggingTaskId(null); return; }
             let movedTask = null;
             setTasks(prev => {
                 const taskToMove = prev[sourceColumn].find(t => t.id === taskId);
@@ -165,85 +103,47 @@ const ProjectTracker = () => {
                 }
                 return prev;
             });
-
-            try {
-                console.log("Calling tasksAPI.move with:", taskId, column);
-                const response = await tasksAPI.move(taskId, column);
-                console.log("Task moved successfully:", response);
-            } catch (err) {
-                console.error("Failed to move task - Full error:", err);
-                console.error("Error response:", err?.response);
-                console.error("Error data:", err?.response?.data);
-                // revert on failure
+            try { await tasksAPI.move(taskId, column); } catch (err) {
+                console.error("Failed to move task:", err);
                 if (movedTask) {
                     setTasks(prev => {
                         const without = prev[column].filter(t => t.id !== taskId);
-                        return {
-                            ...prev,
-                            [column]: without,
-                            [sourceColumn]: [...prev[sourceColumn], movedTask]
-                        };
+                        return { ...prev, [column]: without, [sourceColumn]: [...prev[sourceColumn], movedTask] };
                     });
                 }
-                const errorMsg = err?.response?.data?.error || err?.message || "Failed to move task";
-                setError(errorMsg);
-                console.error("Setting error message:", errorMsg);
+                setError(err?.response?.data?.error || err?.message || "Failed to move task");
             }
         }
-        
-        setDraggedTask(null);
-        setDraggedFrom(null);
-        setDraggingTaskId(null);
+        setDraggedTask(null); setDraggedFrom(null); setDraggingTaskId(null);
     };
 
-    const handleDragEnd = () => {
-        setDraggedTask(null);
-        setDraggedFrom(null);
-        setDraggingTaskId(null);
-    };
+    const handleDragEnd = () => { setDraggedTask(null); setDraggedFrom(null); setDraggingTaskId(null); };
 
     const addNewTask = (column) => {
-        setModalColumn(column);
-        setEditingTask(null);
-        setFormData({
-            title: "",
-            description: "",
-            tag: "",
-            tagColor: "blue",
-            startDate: "",
-            dueDate: ""
-        });
+        setModalColumn(column); setEditingTask(null);
+        setFormData({ title: "", description: "", tag: "", tagColor: "cyan", startDate: "", dueDate: "" });
         setShowModal(true);
     };
 
     const formatDateToDisplay = (dateString) => {
         if (!dateString) return "";
         const date = new Date(dateString);
-        const options = { month: 'short', day: 'numeric', year: 'numeric' };
-        return date.toLocaleDateString('en-US', options);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     const formatDateToInput = (displayDate) => {
         if (!displayDate) return "";
-        // Parse "Dec 27, 2025" format back to "YYYY-MM-DD"
         const date = new Date(displayDate);
         if (isNaN(date.getTime())) return "";
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     };
 
     const handleEditTask = (task, column) => {
-        setModalColumn(column);
-        setEditingTask(task);
+        setModalColumn(column); setEditingTask(task);
         setFormData({
-            title: task.title,
-            description: task.description || "",
-            tag: task.tag,
-            tagColor: task.tagColor || "blue",
-            startDate: formatDateToInput(task.startDate),
-            dueDate: formatDateToInput(task.dueDate)
+            title: task.title, description: task.description || "",
+            tag: task.tag, tagColor: task.tagColor || "cyan",
+            startDate: formatDateToInput(task.startDate), dueDate: formatDateToInput(task.dueDate)
         });
         setShowModal(true);
     };
@@ -251,24 +151,15 @@ const ProjectTracker = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         (async () => {
-            if (!activeProjectId) {
-                setError("Project not ready yet");
-                return;
-            }
-
+            if (!activeProjectId) { setError("Project not ready yet"); return; }
             setError("");
-
             const payload = {
-                title: formData.title,
-                description: formData.description,
-                tag: formData.tag,
-                tagColor: formData.tagColor,
+                title: formData.title, description: formData.description,
+                tag: formData.tag, tagColor: formData.tagColor,
                 startDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
                 dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined,
-                status: modalColumn,
-                project: activeProjectId
+                status: modalColumn, project: activeProjectId
             };
-
             try {
                 if (editingTask) {
                     const updated = await tasksAPI.update(editingTask.id, payload);
@@ -284,22 +175,10 @@ const ProjectTracker = () => {
                     const created = await tasksAPI.create(payload);
                     const createdTask = { ...created.data, id: created.data._id };
                     const status = createdTask.status || modalColumn;
-                    setTasks(prev => ({
-                        ...prev,
-                        [status]: [...prev[status], createdTask]
-                    }));
+                    setTasks(prev => ({ ...prev, [status]: [...prev[status], createdTask] }));
                 }
-
-                setShowModal(false);
-                setEditingTask(null);
-                setFormData({
-                    title: "",
-                    description: "",
-                    tag: "",
-                    tagColor: "blue",
-                    startDate: "",
-                    dueDate: ""
-                });
+                setShowModal(false); setEditingTask(null);
+                setFormData({ title: "", description: "", tag: "", tagColor: "cyan", startDate: "", dueDate: "" });
             } catch (err) {
                 console.error("Failed to save task:", err);
                 setError(err?.response?.data?.error || "Failed to save task");
@@ -307,12 +186,7 @@ const ProjectTracker = () => {
         })();
     };
 
-    const handleFormChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
+    const handleFormChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
     const filteredTasks = (columnTasks) => {
         if (!searchQuery) return columnTasks;
@@ -325,109 +199,141 @@ const ProjectTracker = () => {
 
     const handleDeleteTask = async (e, taskId, column) => {
         e.stopPropagation();
-        if (!window.confirm("Are you sure you want to delete this task?")) {
-            return;
-        }
-
+        if (!window.confirm("Delete this task?")) return;
         try {
             await tasksAPI.delete(taskId);
-            setTasks(prev => ({
-                ...prev,
-                [column]: prev[column].filter(t => t.id !== taskId)
-            }));
-        } catch (err) {
-            console.error("Failed to delete task:", err);
-            setError(err?.response?.data?.error || "Failed to delete task");
-        }
+            setTasks(prev => ({ ...prev, [column]: prev[column].filter(t => t.id !== taskId) }));
+        } catch (err) { setError(err?.response?.data?.error || "Failed to delete task"); }
     };
 
-    const TaskCard = ({ task, column }) => {
-        return (
-            <div
-                draggable={true}
-                onDragStart={(e) => handleDragStart(e, task, column)}
-                onDragEnd={handleDragEnd}
-                onClick={() => handleEditTask(task, column)}
-                className={`relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-3 md:p-4 mb-3 cursor-pointer hover:border-cyan-500/50 transition group select-none ${
-                    draggingTaskId === task.id ? "opacity-60 border-cyan-500/40" : ""
-                }`}
-            >
+    const columnConfig = [
+        { key: 'todo', label: 'TO DO', indicatorColor: 'var(--slate)' },
+        { key: 'inProgress', label: 'IN PROGRESS', indicatorColor: 'var(--cyan)' },
+        { key: 'done', label: 'DONE', indicatorColor: '#4ADE80' },
+    ];
+
+    const TaskCard = ({ task, column }) => (
+        <div
+            draggable
+            onDragStart={(e) => handleDragStart(e, task, column)}
+            onDragEnd={handleDragEnd}
+            onClick={() => handleEditTask(task, column)}
+            style={{
+                background: 'var(--canvas)', border: `1px solid ${draggingTaskId === task.id ? 'var(--cyan)' : 'var(--border)'}`,
+                borderRadius: '10px', padding: '14px', marginBottom: '8px', cursor: 'pointer',
+                opacity: draggingTaskId === task.id ? 0.6 : 1,
+                transition: 'border-color 0.15s, opacity 0.15s',
+                position: 'relative',
+                userSelect: 'none',
+            }}
+            onMouseEnter={e => { if (draggingTaskId !== task.id) e.currentTarget.style.borderColor = 'rgba(0,210,255,0.3)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = draggingTaskId === task.id ? 'var(--cyan)' : 'var(--border)'; }}
+            className="group"
+        >
+            {/* Delete button */}
             <button
                 onClick={(e) => handleDeleteTask(e, task.id, column)}
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity p-1.5 rounded-md bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50"
+                style={{
+                    position: 'absolute', top: '10px', right: '10px',
+                    background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                    borderRadius: '5px', padding: '3px', cursor: 'pointer',
+                    color: '#F87171', opacity: 0, transition: 'opacity 0.15s',
+                }}
+                className="group-hover:opacity-100"
                 title="Delete task"
             >
-                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
                 </svg>
             </button>
-            <h3 className="text-gray-900 dark:text-white font-medium mb-2 text-sm md:text-base pr-8">{task.title}</h3>
-            {task.description && (
-                <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm mb-2 line-clamp-2">{task.description}</p>
-            )}
-            <span className={`inline-block px-2 py-1 rounded text-xs font-medium mb-3 ${colorOptions[task.tagColor || 'blue']?.bg || 'bg-blue-500/20'} ${colorOptions[task.tagColor || 'blue']?.text || 'text-blue-400'} border ${colorOptions[task.tagColor || 'blue']?.border || 'border-blue-500/30'}`}>
-                {task.tag}
-            </span>
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
-                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {formatDateToDisplay(task.dueDate)}
-                </div>
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <span className="text-xs text-gray-600 dark:text-gray-500">{task.id}</span>
-            </div>
-        </div>
-        );
-    };
 
-    const Column = ({ title, count, column, tasks }) => (
+            <h3 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--white)', marginBottom: '6px', paddingRight: '20px', lineHeight: '1.4' }}>
+                {task.title}
+            </h3>
+            {task.description && (
+                <p style={{ fontSize: '11px', color: 'var(--slate)', marginBottom: '10px', lineHeight: '1.5', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    {task.description}
+                </p>
+            )}
+            {task.tag && (
+                <span style={{
+                    display: 'inline-block', padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: '600',
+                    letterSpacing: '0.05em', marginBottom: '10px',
+                    background: colorOptions[task.tagColor || 'cyan']?.bg || colorOptions.cyan.bg,
+                    color: colorOptions[task.tagColor || 'cyan']?.text || colorOptions.cyan.text,
+                    border: `1px solid ${colorOptions[task.tagColor || 'cyan']?.border || colorOptions.cyan.border}`,
+                }}>
+                    {task.tag}
+                </span>
+            )}
+            {task.dueDate && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--slate)" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <span style={{ fontSize: '11px', color: 'var(--slate)' }}>{formatDateToDisplay(task.dueDate)}</span>
+                </div>
+            )}
+        </div>
+    );
+
+    const Column = ({ title, count, column, tasks: colTasks, indicatorColor }) => (
         <div
-            className="flex-1 min-w-[280px] md:min-w-[300px]"
-            onDragEnter={handleDragOver}
-            onDragOver={handleDragOver}
+            style={{ flex: 1, minWidth: '260px' }}
+            onDragEnter={handleDragOver} onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, column)}
         >
             <div
-                className="bg-gray-100/70 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 p-3 md:p-4 min-h-[500px]"
-                onDragEnter={handleDragOver}
-                onDragOver={handleDragOver}
+                style={{
+                    background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px',
+                    padding: '14px', minHeight: '500px', display: 'flex', flexDirection: 'column',
+                }}
+                onDragEnter={handleDragOver} onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, column)}
             >
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-400 uppercase tracking-wider">{title}</h2>
-                        <span className="bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-400 text-xs font-semibold px-2 py-1 rounded">
+                {/* Column header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: indicatorColor }} />
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--slate)', letterSpacing: '0.1em' }}>
+                            {title}
+                        </span>
+                        <span style={{
+                            fontSize: '11px', fontWeight: '600', padding: '1px 7px', borderRadius: '20px',
+                            background: 'var(--border)', color: 'var(--slate)',
+                        }}>
                             {count}
                         </span>
                     </div>
-                    {column === 'done' && (
-                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    )}
                 </div>
+
+                {/* Task cards */}
                 <div
-                    className="space-y-3 min-h-[200px]"
-                    onDragEnter={handleDragOver}
-                    onDragOver={handleDragOver}
+                    style={{ flex: 1 }}
+                    onDragEnter={handleDragOver} onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, column)}
                 >
-                    {filteredTasks(tasks).map(task => (
+                    {filteredTasks(colTasks).map(task => (
                         <TaskCard key={task.id} task={task} column={column} />
                     ))}
                 </div>
+
+                {/* Add Task button */}
                 <button
                     onClick={() => addNewTask(column)}
-                    className="w-full mt-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-800 rounded-lg text-gray-700 dark:text-gray-500 hover:border-cyan-500/50 hover:text-cyan-500 dark:hover:text-cyan-400 transition flex items-center justify-center gap-2 text-sm md:text-base"
+                    style={{
+                        width: '100%', padding: '9px', marginTop: '8px',
+                        border: '1.5px dashed var(--border)', borderRadius: '8px',
+                        background: 'transparent', color: 'var(--slate)', cursor: 'pointer',
+                        fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                        transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--cyan)'; e.currentTarget.style.color = 'var(--cyan)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--slate)'; }}
                 >
-                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
                     Add Task
                 </button>
@@ -436,203 +342,119 @@ const ProjectTracker = () => {
     );
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden">
-            <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
-            <div className="md:ml-64 p-4 md:p-6 overflow-auto">
-                {/* Header */}
-                <div className="mb-4 md:mb-6">
-                    <div className="flex items-center gap-4 mb-4">
-                        <button
-                            onClick={() => setMobileSidebarOpen(true)}
-                            className="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300"
-                            aria-label="Open menu"
-                        >
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                        <h1 className="text-xl md:text-2xl font-semibold">Project Tracker</h1>
-                    </div>
-
-                    {error && (
-                        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                            {error}
-                        </div>
-                    )}
-                    
-                    {/* Search and Filter Bar */}
-                    <div className="flex items-center gap-3">
-                        <div className="relative flex-1 max-w-md">
-                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.35-4.35"></path>
-                            </svg>
-                            <input
-                                type="text"
-                                placeholder="Search board"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 md:py-2.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm md:text-base"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Kanban Board */}
-                <div className="flex gap-4 overflow-x-auto pb-4">
-                    <Column
-                        title="TO DO"
-                        count={filteredTasks(tasks.todo).length}
-                        column="todo"
-                        tasks={tasks.todo}
-                    />
-                    <Column
-                        title="IN PROGRESS"
-                        count={filteredTasks(tasks.inProgress).length}
-                        column="inProgress"
-                        tasks={tasks.inProgress}
-                    />
-                    <Column
-                        title="DONE"
-                        count={filteredTasks(tasks.done).length}
-                        column="done"
-                        tasks={tasks.done}
+        <DashboardLayout title="Project Tracker" tagline="Manage your work streams." noPadding>
+            <div style={{ padding: '24px 32px' }}>
+                {/* Search bar */}
+                <div style={{ marginBottom: '20px', position: 'relative', maxWidth: '320px' }}>
+                    <svg style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--slate)' }}
+                        width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder="Search tasks..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="th-input"
+                        style={{ paddingLeft: '36px' }}
                     />
                 </div>
 
-                {/* Modal for Add/Edit Task */}
-                {showModal && (
-                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg max-w-lg w-full p-4 md:p-6">
-                            <div className="flex items-center justify-between mb-4 md:mb-6">
-                                <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
-                                    {editingTask ? "Edit Task" : "Add New Task"}
-                                </h2>
-                                <button
-                                    onClick={() => setShowModal(false)}
-                                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                {error && (
+                    <div style={{ marginBottom: '16px', padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#F87171', fontSize: '13px' }}>
+                        {error}
+                    </div>
+                )}
+
+                {/* Kanban columns */}
+                <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '16px' }}>
+                    {columnConfig.map(({ key, label, indicatorColor }) => (
+                        <Column
+                            key={key}
+                            title={label}
+                            count={filteredTasks(tasks[key]).length}
+                            column={key}
+                            tasks={tasks[key]}
+                            indicatorColor={indicatorColor}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Add/Edit Modal */}
+            {showModal && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '16px' }}>
+                    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '14px', width: '100%', maxWidth: '480px', overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.6)' }}>
+                        {/* Modal header */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--border)' }}>
+                            <h2 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--white)', margin: 0 }}>
+                                {editingTask ? "Edit Task" : "New Task"}
+                            </h2>
+                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', color: 'var(--slate)', cursor: 'pointer', padding: '4px' }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M18 6L6 18M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>TITLE *</label>
+                                <input type="text" required value={formData.title} onChange={e => handleFormChange('title', e.target.value)} placeholder="Task title" className="th-input" />
                             </div>
-
-                            <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>DESCRIPTION</label>
+                                <textarea value={formData.description} onChange={e => handleFormChange('description', e.target.value)} rows={3} placeholder="Optional description" className="th-input" style={{ resize: 'none' }} />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <div>
-                                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
-                                        Title *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.title}
-                                        onChange={(e) => handleFormChange('title', e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm"
-                                        placeholder="Enter task title"
-                                    />
+                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>TAG *</label>
+                                    <input type="text" required value={formData.tag} onChange={e => handleFormChange('tag', e.target.value)} placeholder="e.g. Frontend" className="th-input" />
                                 </div>
-
                                 <div>
-                                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
-                                        Description
-                                    </label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(e) => handleFormChange('description', e.target.value)}
-                                        rows="3"
-                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition resize-none text-sm"
-                                        placeholder="Enter task description"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
-                                        Tag *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.tag}
-                                        onChange={(e) => handleFormChange('tag', e.target.value)}
-                                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition text-sm"
-                                        placeholder="Enter tag (e.g. FrontEnd, BackEnd, Design)"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
-                                        Tag Color *
-                                    </label>
-                                    <div className="flex gap-2 flex-wrap">
-                                        {['blue', 'green', 'red', 'yellow', 'purple', 'orange', 'teal', 'gray', 'indigo'].map(color => (
+                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>TAG COLOR</label>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', paddingTop: '2px' }}>
+                                        {Object.keys(solidColors).map(color => (
                                             <button
-                                                key={color}
-                                                type="button"
+                                                key={color} type="button"
                                                 onClick={() => handleFormChange('tagColor', color)}
-                                                className={`w-10 h-10 rounded-lg border-2 transition ${
-                                                    formData.tagColor === color
-                                                        ? `${colorOptions[color].selectedBorder} ${colorOptions[color].selectedBg}`
-                                                        : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600'
-                                                } ${colorOptions[color].bg}`}
-                                                title={color.charAt(0).toUpperCase() + color.slice(1)}
-                                            >
-                                                <div className={`w-full h-full rounded ${colorOptions[color].solid}`}></div>
-                                            </button>
+                                                style={{
+                                                    width: '22px', height: '22px', borderRadius: '50%',
+                                                    background: solidColors[color], border: `2px solid ${formData.tagColor === color ? 'var(--white)' : 'transparent'}`,
+                                                    cursor: 'pointer', transition: 'border-color 0.1s',
+                                                }}
+                                                title={color}
+                                            />
                                         ))}
                                     </div>
                                 </div>
-
-                                <div className="grid grid-cols-2 gap-3 md:gap-4">
-                                    <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
-                                            Start Date *
-                                        </label>
-                                        <input
-                                            type="date"
-                                            required
-                                            value={formData.startDate}
-                                            onChange={(e) => handleFormChange('startDate', e.target.value)}
-                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 transition dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer text-sm"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
-                                            Due Date *
-                                        </label>
-                                        <input
-                                            type="date"
-                                            required
-                                            value={formData.dueDate}
-                                            onChange={(e) => handleFormChange('dueDate', e.target.value)}
-                                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-cyan-500 transition dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer text-sm"
-                                        />
-                                    </div>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>START DATE *</label>
+                                    <input type="date" required value={formData.startDate} onChange={e => handleFormChange('startDate', e.target.value)} className="th-input" />
                                 </div>
-
-                                <div className="flex gap-3 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowModal(false)}
-                                        className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg transition text-sm md:text-base"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition text-sm md:text-base"
-                                    >
-                                        {editingTask ? "Update Task" : "Add Task"}
-                                    </button>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>DUE DATE *</label>
+                                    <input type="date" required value={formData.dueDate} onChange={e => handleFormChange('dueDate', e.target.value)} className="th-input" />
                                 </div>
-                            </form>
-                        </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', paddingTop: '4px' }}>
+                                <button type="button" onClick={() => setShowModal(false)}
+                                    style={{ flex: 1, padding: '10px', background: 'var(--canvas)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--slate)', cursor: 'pointer', fontSize: '13px', fontWeight: '500', transition: 'all 0.15s' }}>
+                                    Cancel
+                                </button>
+                                <button type="submit"
+                                    style={{ flex: 1, padding: '10px', background: 'var(--cyan)', border: 'none', borderRadius: '8px', color: 'var(--canvas)', cursor: 'pointer', fontSize: '13px', fontWeight: '700', transition: 'opacity 0.15s' }}>
+                                    {editingTask ? "Update" : "Create"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                )}
-            </div>
-        </div>
+                </div>
+            )}
+        </DashboardLayout>
     );
-}
+};
 
 export default ProjectTracker;

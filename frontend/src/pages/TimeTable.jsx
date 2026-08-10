@@ -1,29 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import Sidebar from "../components/Sidebar";
+import DashboardLayout from "../components/DashboardLayout";
 import { timetableAPI } from "../services/api";
 
 const TimeTable = () => {
     const [schedule, setSchedule] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const saveTimersRef = useRef(new Map());
 
     const normalizeDates = (dates) => {
         if (!dates) return {};
         if (dates instanceof Map) return Object.fromEntries(dates.entries());
-        if (Array.isArray(dates)) {
-            try {
-                return Object.fromEntries(dates);
-            } catch {
-                return {};
-            }
-        }
+        if (Array.isArray(dates)) { try { return Object.fromEntries(dates); } catch { return {}; } }
         if (typeof dates === 'object') return dates;
         return {};
     };
 
-    // Generate dates for the week
     const generateWeekDates = () => {
         const dates = [];
         const today = new Date();
@@ -31,7 +23,6 @@ const TimeTable = () => {
         const monday = new Date(today);
         monday.setDate(today.getDate() - currentDay + (currentDay === 0 ? -6 : 1));
         monday.setHours(0, 0, 0, 0);
-
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday);
             date.setDate(monday.getDate() + i);
@@ -59,27 +50,25 @@ const TimeTable = () => {
         return { day, dateNum, month, fullDate };
     };
 
+    const todayStr = useMemo(() => {
+        const t = new Date();
+        return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    }, []);
+
     useEffect(() => {
         const load = async () => {
-            setLoading(true);
-            setError("");
+            setLoading(true); setError("");
             try {
                 const res = await timetableAPI.getWeek(weekStartKey);
                 const rows = (res.data || []).map((r) => ({
-                    id: r._id,
-                    time: r.time || "",
-                    activity: r.activity || "",
-                    dates: normalizeDates(r.dates)
+                    id: r._id, time: r.time || "", activity: r.activity || "", dates: normalizeDates(r.dates)
                 }));
                 setSchedule(rows);
             } catch (e) {
                 console.error("Failed to load timetable:", e);
                 setError(e?.response?.data?.error || "Failed to load timetable");
-            } finally {
-                setLoading(false);
-            }
+            } finally { setLoading(false); }
         };
-
         load();
     }, [weekStartKey]);
 
@@ -87,14 +76,9 @@ const TimeTable = () => {
         const existing = saveTimersRef.current.get(rowId);
         if (existing) clearTimeout(existing);
         const timer = setTimeout(async () => {
-            try {
-                await timetableAPI.updateRow(rowId, patch);
-            } catch (e) {
-                console.error("Failed to save row:", e);
-                setError(e?.response?.data?.error || "Failed to save row");
-            } finally {
-                saveTimersRef.current.delete(rowId);
-            }
+            try { await timetableAPI.updateRow(rowId, patch); }
+            catch (e) { console.error("Failed to save row:", e); setError(e?.response?.data?.error || "Failed to save row"); }
+            finally { saveTimersRef.current.delete(rowId); }
         }, 400);
         saveTimersRef.current.set(rowId, timer);
     };
@@ -102,191 +86,221 @@ const TimeTable = () => {
     const toggleCheckbox = async (taskId, dateKey) => {
         const row = schedule.find((t) => t.id === taskId);
         if (!row) return;
-
         const currentDates = normalizeDates(row.dates);
-        const nextDates = {
-            ...currentDates,
-            [dateKey]: !currentDates[dateKey]
-        };
-
-        setSchedule(prev => prev.map(task => (
-            task.id === taskId ? { ...task, dates: nextDates } : task
-        )));
-
-        try {
-            await timetableAPI.updateRow(taskId, { dates: nextDates });
-        } catch (e) {
+        const nextDates = { ...currentDates, [dateKey]: !currentDates[dateKey] };
+        setSchedule(prev => prev.map(task => task.id === taskId ? { ...task, dates: nextDates } : task));
+        try { await timetableAPI.updateRow(taskId, { dates: nextDates }); }
+        catch (e) {
             console.error("Failed to toggle:", e);
             setError(e?.response?.data?.error || "Failed to update checkbox");
-            // revert
-            setSchedule(prev => prev.map(task => (
-                task.id === taskId ? { ...task, dates: currentDates } : task
-            )));
+            setSchedule(prev => prev.map(task => task.id === taskId ? { ...task, dates: currentDates } : task));
         }
     };
 
     const addNewRow = async () => {
         setError("");
         try {
-            const created = await timetableAPI.createRow({
-                weekStart: weekStartKey,
-                time: "",
-                activity: "",
-                dates: {}
-            });
+            const created = await timetableAPI.createRow({ weekStart: weekStartKey, time: "", activity: "", dates: {} });
             const row = created.data;
             setSchedule(prev => [...prev, { id: row._id, time: row.time || "", activity: row.activity || "", dates: row.dates || {} }]);
-        } catch (e) {
-            console.error("Failed to create row:", e);
-            setError(e?.response?.data?.error || "Failed to create row");
-        }
+        } catch (e) { console.error("Failed to create row:", e); setError(e?.response?.data?.error || "Failed to create row"); }
     };
 
     const deleteRow = async (id) => {
         setSchedule(prev => prev.filter(task => task.id !== id));
-        try {
-            await timetableAPI.deleteRow(id);
-        } catch (e) {
-            console.error("Failed to delete row:", e);
-            setError(e?.response?.data?.error || "Failed to delete row");
-        }
+        try { await timetableAPI.deleteRow(id); }
+        catch (e) { console.error("Failed to delete row:", e); setError(e?.response?.data?.error || "Failed to delete row"); }
     };
 
     const updateTask = (id, field, value) => {
-        setSchedule(prev => prev.map(task =>
-            task.id === id ? { ...task, [field]: value } : task
-        ));
-        if (field === 'time' || field === 'activity') {
-            queueSave(id, { [field]: value });
-        }
+        setSchedule(prev => prev.map(task => task.id === id ? { ...task, [field]: value } : task));
+        if (field === 'time' || field === 'activity') { queueSave(id, { [field]: value }); }
+    };
+
+    const cellStyle = {
+        padding: '10px 12px',
+        borderRight: '1px solid var(--border)',
+        fontSize: '12px',
+        color: 'var(--white)',
+        verticalAlign: 'middle',
+    };
+
+    const headerCellStyle = {
+        ...cellStyle,
+        background: 'var(--canvas)',
+        color: 'var(--slate)',
+        fontSize: '11px',
+        fontWeight: '600',
+        letterSpacing: '0.06em',
+        padding: '10px 12px',
+        borderBottom: '1px solid var(--border)',
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden">
-            <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
-            <div className="md:ml-64 p-4 md:p-6 h-screen overflow-auto">
-                <div className="mb-4 md:mb-6">
-                    <div className="flex items-center gap-4 mb-2">
-                        <button
-                            onClick={() => setMobileSidebarOpen(true)}
-                            className="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300"
-                            aria-label="Open menu"
-                        >
-                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                        <h1 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-white">TimeTable</h1>
-                    </div>
-                    <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">Manage your weekly schedule</p>
+        <DashboardLayout title="Time Table" tagline="Manage your weekly schedule.">
+            {error && (
+                <div style={{ marginBottom: '16px', padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#F87171', fontSize: '13px' }}>
+                    {error}
                 </div>
+            )}
 
-                {error && (
-                    <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                        {error}
-                    </div>
-                )}
+            <div className="th-card" style={{ overflow: 'hidden' }}>
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr>
+                                <th style={{ ...headerCellStyle, width: '90px', textAlign: 'left' }}>TIME</th>
+                                <th style={{ ...headerCellStyle, width: '180px', textAlign: 'left' }}>ACTIVITY</th>
+                                {weekDates.map((date, idx) => {
+                                    const { day, dateNum, month, fullDate } = formatDate(date);
+                                    const isToday = fullDate === todayStr;
+                                    return (
+                                        <th key={idx} style={{
+                                            ...headerCellStyle,
+                                            textAlign: 'center',
+                                            color: isToday ? 'var(--cyan)' : 'var(--slate)',
+                                            minWidth: '70px',
+                                        }}>
+                                            <div>{day.toUpperCase()}</div>
+                                            <div style={{ fontSize: '10px', opacity: 0.7, marginTop: '1px' }}>{month}/{dateNum}</div>
+                                        </th>
+                                    );
+                                })}
+                                <th style={{ ...headerCellStyle, width: '44px', borderRight: 'none' }} />
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={weekDates.length + 3} style={{ ...cellStyle, textAlign: 'center', padding: '40px', color: 'var(--slate)', borderRight: 'none' }}>
+                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid var(--border)', borderTopColor: 'var(--cyan)', margin: '0 auto 8px', animation: 'spin 1s linear infinite' }} />
+                                        Loading...
+                                    </td>
+                                </tr>
+                            ) : schedule.map((task, rowIndex) => (
+                                <tr
+                                    key={task.id}
+                                    style={{
+                                        borderBottom: '1px solid var(--border)',
+                                        transition: 'background 0.1s',
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,210,255,0.02)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    {/* Time */}
+                                    <td style={{ ...cellStyle }}>
+                                        <input
+                                            type="time"
+                                            value={task.time}
+                                            onChange={(e) => updateTask(task.id, 'time', e.target.value)}
+                                            style={{
+                                                background: 'transparent', border: 'none', outline: 'none',
+                                                color: 'var(--slate)', fontSize: '12px', fontFamily: 'Inter, sans-serif',
+                                                cursor: 'pointer', width: '100%',
+                                                transition: 'color 0.15s',
+                                            }}
+                                            onFocus={e => e.target.style.color = 'var(--cyan)'}
+                                            onBlur={e => e.target.style.color = 'var(--slate)'}
+                                        />
+                                    </td>
 
-                <div className="bg-gray-100/70 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full md:min-w-[900px] min-w-[700px]">
-                            <thead>
-                                <tr className="border-b border-gray-200 dark:border-gray-800">
-                                    <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-24 md:w-32">
-                                        Time
-                                    </th>
-                                    <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-32 md:w-48">
-                                        Activity
-                                    </th>
-                                    {weekDates.map((date, index) => {
-                                        const { day, dateNum, month } = formatDate(date);
+                                    {/* Activity */}
+                                    <td style={{ ...cellStyle }}>
+                                        <input
+                                            type="text"
+                                            value={task.activity}
+                                            onChange={(e) => updateTask(task.id, 'activity', e.target.value)}
+                                            placeholder="Enter activity"
+                                            style={{
+                                                background: 'transparent', border: 'none', outline: 'none',
+                                                color: 'var(--white)', fontSize: '12px', fontFamily: 'Inter, sans-serif',
+                                                width: '100%', transition: 'color 0.15s',
+                                            }}
+                                            onFocus={e => e.target.style.color = 'var(--cyan)'}
+                                            onBlur={e => e.target.style.color = 'var(--white)'}
+                                        />
+                                    </td>
+
+                                    {/* Day checkboxes */}
+                                    {weekDates.map((date, colIdx) => {
+                                        const { fullDate } = formatDate(date);
+                                        const isChecked = task.dates[fullDate] || false;
+                                        const isToday = fullDate === todayStr;
                                         return (
-                                            <th key={index} className="px-2 md:px-4 py-2 md:py-3 text-center text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-16 md:w-24">
-                                                <div className="text-xs">{day}</div>
-                                                <div className="text-xs text-gray-600 dark:text-gray-500">{month}/{dateNum}</div>
-                                            </th>
+                                            <td key={colIdx} style={{ ...cellStyle, textAlign: 'center' }}>
+                                                <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => toggleCheckbox(task.id, fullDate)}
+                                                        style={{ display: 'none' }}
+                                                    />
+                                                    <div
+                                                        style={{
+                                                            width: '16px', height: '16px', borderRadius: '4px',
+                                                            border: `1.5px solid ${isChecked ? 'var(--cyan)' : isToday ? 'rgba(0,210,255,0.4)' : 'var(--border)'}`,
+                                                            background: isChecked ? 'var(--cyan)' : 'transparent',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            transition: 'all 0.15s',
+                                                        }}
+                                                    >
+                                                        {isChecked && (
+                                                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--canvas)" strokeWidth="3.5">
+                                                                <polyline points="20 6 9 17 4 12" />
+                                                            </svg>
+                                                        )}
+                                                    </div>
+                                                </label>
+                                            </td>
                                         );
                                     })}
-                                    <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs md:text-sm font-medium text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/70 w-12 md:w-20">
-                                        
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan={weekDates.length + 3} className="px-4 py-6 text-center text-gray-500">
-                                            Loading...
-                                        </td>
-                                    </tr>
-                                ) : schedule.map((task, rowIndex) => (
-                                    <tr key={task.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-200/60 dark:hover:bg-gray-800/30 transition">
-                                        <td className="px-2 md:px-4 py-2 md:py-3 border-r border-gray-200 dark:border-gray-800">
-                                            <input
-                                                type="time"
-                                                value={task.time}
-                                                onChange={(e) => updateTask(task.id, 'time', e.target.value)}
-                                                className="w-full bg-transparent text-xs md:text-sm focus:outline-none focus:text-cyan-400 transition cursor-pointer dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                                                placeholder="Select time"
-                                            />
-                                        </td>
-                                        <td className="px-2 md:px-4 py-2 md:py-3 border-r border-gray-200 dark:border-gray-800">
-                                            <input
-                                                type="text"
-                                                value={task.activity}
-                                                onChange={(e) => updateTask(task.id, 'activity', e.target.value)}
-                                                className="w-full bg-transparent text-xs md:text-sm focus:outline-none focus:text-cyan-400 transition"
-                                                placeholder="Enter activity"
-                                            />
-                                        </td>
-                                        {weekDates.map((date, colIndex) => {
-                                            const { fullDate } = formatDate(date);
-                                            const isChecked = task.dates[fullDate] || false;
-                                            return (
-                                                <td key={colIndex} className="px-2 md:px-4 py-2 md:py-3 border-r border-gray-200 dark:border-gray-800 text-center">
-                                                    <div className="flex justify-center">
-                                                        <label className="cursor-pointer">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={isChecked}
-                                                                onChange={() => toggleCheckbox(task.id, fullDate)}
-                                                                className="w-4 h-4 accent-cyan-500 cursor-pointer"
-                                                            />
-                                                        </label>
-                                                    </div>
-                                                </td>
-                                            );
-                                        })}
-                                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                                            <button
-                                                onClick={() => deleteRow(task.id)}
-                                                className="text-gray-500 hover:text-red-400 transition-colors p-1 rounded hover:bg-red-500/10"
-                                                title="Delete row"
-                                            >
-                                                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
-                <button
-                    onClick={addNewRow}
-                    className="mt-4 px-3 py-2 md:px-4 md:py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded-lg transition flex items-center gap-2 text-sm md:text-base"
-                >
-                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Add New Row
-                </button>
+                                    {/* Delete */}
+                                    <td style={{ ...cellStyle, textAlign: 'center', borderRight: 'none' }}>
+                                        <button
+                                            onClick={() => deleteRow(task.id)}
+                                            style={{
+                                                background: 'none', border: 'none', cursor: 'pointer',
+                                                color: 'var(--slate)', padding: '3px', borderRadius: '4px',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                transition: 'color 0.15s',
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.color = '#F87171'}
+                                            onMouseLeave={e => e.currentTarget.style.color = 'var(--slate)'}
+                                            title="Delete row"
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+
+            {/* Add row button */}
+            <button
+                onClick={addNewRow}
+                style={{
+                    marginTop: '14px', padding: '9px 16px',
+                    background: 'var(--cyan-dim)', border: '1px solid rgba(0,210,255,0.25)',
+                    borderRadius: '8px', color: 'var(--cyan)', cursor: 'pointer',
+                    fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px',
+                    transition: 'all 0.15s', fontFamily: 'Inter, sans-serif',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,210,255,0.15)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--cyan-dim)'; }}
+            >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add New Row
+            </button>
+        </DashboardLayout>
     );
-}
+};
 
 export default TimeTable;

@@ -1,64 +1,346 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  @keyframes chart-grow {
-    0% {
-      height: 0%;
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
+/* ─────────────────────────────────────────────
+   TRACKHUB DESIGN TOKENS
+───────────────────────────────────────────── */
+:root {
+  --canvas: #0D0E10;
+  --surface: #17181C;
+  --border: #23252B;
+  --border-dark: #1E2026;
+  --cyan: #00D2FF;
+  --cyan-dim: rgba(0, 210, 255, 0.08);
+  --cyan-glow: rgba(0, 210, 255, 0.15);
+  --slate: #8A909E;
+  --slate-dark: #5A6070;
+  --white: #FFFFFF;
+  --radius: 12px;
+  --sidebar-width: 200px;
+  --iconbar-width: 40px;
+}
 
-  @keyframes fade-in {
-    0% {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+/* ─────────────────────────────────────────────
+   BASE RESET
+───────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-  @keyframes spin-slow {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
+html {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-  @keyframes progress-bar {
-    0% {
-      width: 0%;
-      opacity: 0.3;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0.5;
-    }
-  }
+body {
+  background-color: var(--canvas);
+  color: var(--white);
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+}
 
-  .animate-chart-grow {
-    animation: chart-grow 1s ease-out forwards;
-  }
+/* ─────────────────────────────────────────────
+   SCROLLBAR STYLING
+───────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-dark);
+}
 
-  .animate-fade-in {
-    animation: fade-in 0.8s ease-out forwards;
-  }
+/* ─────────────────────────────────────────────
+   COMPONENT CLASSES
+───────────────────────────────────────────── */
 
-  .animate-spin-slow {
-    animation: spin-slow 3s linear infinite;
-  }
+/* Surface Card */
+.th-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
 
-  .animate-progress-bar {
-    animation: progress-bar 2s ease-in-out infinite;
-  }
+/* Metric Card */
+.th-metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+.th-metric-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+.th-metric-card.active::after {
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan-glow);
+}
+.th-metric-card:hover {
+  border-color: rgba(0, 210, 255, 0.3);
+}
+
+/* Chart Block */
+.th-chart-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+/* Action Footer */
+.th-action-footer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* Cyan pill button */
+.th-btn-primary {
+  background: var(--cyan);
+  color: var(--canvas);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  font-family: 'Inter', sans-serif;
+}
+.th-btn-primary:hover {
+  opacity: 0.85;
+}
+
+/* Ghost pill button */
+.th-btn-ghost {
+  background: transparent;
+  color: var(--slate);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Inter', sans-serif;
+}
+.th-btn-ghost:hover {
+  border-color: var(--slate);
+  color: var(--white);
+}
+
+/* Digital timer */
+.th-timer {
+  font-family: 'Inter', monospace;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 0.05em;
+  color: var(--cyan);
+}
+
+/* Input base */
+.th-input {
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease;
+  width: 100%;
+}
+.th-input::placeholder {
+  color: var(--slate-dark);
+}
+.th-input:focus {
+  border-color: var(--cyan);
+}
+
+/* ─────────────────────────────────────────────
+   ANIMATIONS
+───────────────────────────────────────────── */
+@keyframes fadeUp {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes chartGrow {
+  0% { height: 0%; opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes spinSlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes progressBar {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
+.animate-chart-grow { animation: chartGrow 0.9s ease-out forwards; }
+.animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+.animate-spin-slow { animation: spinSlow 3s linear infinite; }
+.animate-fade-in { animation: fadeUp 0.6s ease-out forwards; }
+.animate-progress-bar { animation: progressBar 2s ease-in-out infinite alternate; }
+
+/* ─────────────────────────────────────────────
+   LAYOUT UTILITIES
+───────────────────────────────────────────── */
+.th-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+.th-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+}
+
+.th-iconbar {
+  width: var(--iconbar-width);
+  flex-shrink: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  border-left: 1px solid var(--border);
+  background: var(--canvas);
+}
+
+.th-main {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  margin-right: var(--iconbar-width);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─────────────────────────────────────────────
+   NAV ACTIVE INDICATOR
+───────────────────────────────────────────── */
+.th-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  color: var(--slate);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+  text-decoration: none;
+  overflow: hidden;
+}
+.th-nav-item:hover {
+  color: var(--white);
+  background: var(--cyan-dim);
+}
+.th-nav-item.active {
+  color: var(--cyan);
+  background: var(--cyan-dim);
+}
+.th-nav-item.active::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  background: var(--cyan);
+  border-radius: 2px 0 0 2px;
+}
+
+/* ─────────────────────────────────────────────
+   ICON BOX (for metric cards)
+───────────────────────────────────────────── */
+.th-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--cyan-dim);
+  border: 1px solid rgba(0, 210, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────
+   CHECKBOX OVERRIDE
+───────────────────────────────────────────── */
+input[type="checkbox"] {
+  accent-color: var(--cyan);
+}
+
+/* ─────────────────────────────────────────────
+   DATE INPUT PICKER ICON FIX
+───────────────────────────────────────────── */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.5);
+  cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────
+   MOBILE RESPONSIVE OVERRIDES
+───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .th-sidebar { display: none; }
+  .th-iconbar { display: none; }
+  .th-main { margin-left: 0; margin-right: 0; }
 }
