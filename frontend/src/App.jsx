@@ -20,28 +20,28 @@ function AppWrapper() {
       <main className="flex-grow">
         <Routes location={backgroundLocation || location}>
           {/* Public Routes - Redirect to dashboard if already logged in */}
-          <Route path='/' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn/>} />
-          <Route path='/signup' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp/>} />
-          
+          <Route path='/' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />} />
+          <Route path='/signup' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp />} />
+
           {/* Protected Routes */}
           <Route path='/dashboard' element={
             <ProtectedRoute>
-              <Dashboard/>
+              <Dashboard />
             </ProtectedRoute>
           } />
           <Route path='/project-tracker' element={
             <ProtectedRoute>
-              <ProjectTracker/>
+              <ProjectTracker />
             </ProtectedRoute>
           } />
           <Route path='/timetable' element={
             <ProtectedRoute>
-              <TimeTable/>
+              <TimeTable />
             </ProtectedRoute>
           } />
           <Route path='/todo' element={
             <ProtectedRoute>
-              <ToDo/>
+              <ToDo />
             </ProtectedRoute>
           } />
 
@@ -49,7 +49,7 @@ function AppWrapper() {
           {!backgroundLocation && (
             <Route path='/settings' element={
               <ProtectedRoute>
-                <Settings/>
+                <Settings />
               </ProtectedRoute>
             } />
           )}
@@ -58,11 +58,11 @@ function AppWrapper() {
           {!backgroundLocation && (
             <Route path='/profile' element={
               <ProtectedRoute>
-                <Profile/>
+                <Profile />
               </ProtectedRoute>
             } />
           )}
-          
+
           {/* Catch all - redirect to signin */}
           <Route path='*' element={<Navigate to="/" replace />} />
         </Routes>
@@ -72,12 +72,12 @@ function AppWrapper() {
           <Routes>
             <Route path='/settings' element={
               <ProtectedRoute>
-                <Settings/>
+                <Settings />
               </ProtectedRoute>
             } />
             <Route path='/profile' element={
               <ProtectedRoute>
-                <Profile/>
+                <Profile />
               </ProtectedRoute>
             } />
           </Routes>
@@ -91,7 +91,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AppWrapper/>
+      <AppWrapper />
     </BrowserRouter>
   );
 }

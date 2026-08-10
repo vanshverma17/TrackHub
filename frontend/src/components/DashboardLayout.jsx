@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
-import RightIconBar from "./RightIconBar";
+import logo from "../assets/logotrack.png";
 
 /**
  * DashboardLayout — Universal page wrapper.
@@ -31,23 +31,25 @@ const DashboardLayout = ({ title, tagline, children, noPadding = false, footer }
             <Sidebar mobileOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
 
             {/* Central Workspace */}
-            <main className="th-main" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <main className="th-main" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', minWidth: 0 }}>
 
-                {/* Mobile Header */}
-                <div className="md:hidden" style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '12px 16px', borderBottom: '1px solid var(--border)'
-                }}>
-                    <button
-                        onClick={() => setMobileSidebarOpen(true)}
-                        aria-label="Open menu"
-                        style={{ background: 'none', border: 'none', color: 'var(--slate)', cursor: 'pointer', padding: '4px' }}
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                    <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--white)' }}>{title}</span>
+                {/* Mobile Header (Minimalist) */}
+                <div className="md:hidden">
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '12px', background: 'var(--canvas)'
+                    }}>
+                        <button
+                            onClick={() => setMobileSidebarOpen(true)}
+                            aria-label="Open menu"
+                            style={{
+                                background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                        >
+                            <img src={logo} alt="TrackHub Menu" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Page Header — Desktop */}
@@ -96,9 +98,6 @@ const DashboardLayout = ({ title, tagline, children, noPadding = false, footer }
                     </div>
                 )}
             </main>
-
-            {/* Right Icon Bar */}
-            <RightIconBar />
         </div>
     );
 };

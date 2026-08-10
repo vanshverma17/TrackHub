@@ -5,6 +5,12 @@ import { projectsAPI, tasksAPI, timeEntriesAPI, todosAPI } from "../services/api
 const Dashboard = () => {
     const TIME_TRACKER_STORAGE_KEY = 'trackhub.timeTracker';
     const [userName, setUserName] = useState("");
+    const [sessionName, setSessionName] = useState("");
+
+    // Pomodoro State
+    const [pomodoroMode, setPomodoroMode] = useState("Work"); // "Work", "Short Break", "Long Break"
+    const [pomodoroTime, setPomodoroTime] = useState(25 * 60);
+    const [isPomodoroActive, setIsPomodoroActive] = useState(false);
 
     // Time Tracker State
     const [isTracking, setIsTracking] = useState(false);
@@ -65,6 +71,30 @@ const Dashboard = () => {
     useEffect(() => {
         persistTimeTrackerState({ isTracking, isPaused, startTime, elapsedTime });
     }, [isTracking, isPaused, startTime, elapsedTime]);
+
+    useEffect(() => {
+        let interval;
+        if (isPomodoroActive && pomodoroTime > 0) {
+            interval = setInterval(() => { setPomodoroTime(prev => prev - 1); }, 1000);
+        } else if (pomodoroTime === 0 && isPomodoroActive) {
+            setIsPomodoroActive(false);
+        }
+        return () => clearInterval(interval);
+    }, [isPomodoroActive, pomodoroTime]);
+
+    const formatPomodoroTime = (seconds) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    };
+
+    const setPomodoro = (mode) => {
+        setIsPomodoroActive(false);
+        setPomodoroMode(mode);
+        if (mode === "Work") setPomodoroTime(25 * 60);
+        else if (mode === "Short Break") setPomodoroTime(5 * 60);
+        else if (mode === "Long Break") setPomodoroTime(15 * 60);
+    };
 
     const fetchDashboardData = async () => {
         try {
@@ -151,7 +181,7 @@ const Dashboard = () => {
                 startTime: startTimeObj.toTimeString().slice(0, 5),
                 endTime: now.toTimeString().slice(0, 5),
                 hours: parseFloat(hours.toFixed(2)),
-                description: 'Work session'
+                description: sessionName || 'Work Session'
             });
             fetchDashboardData();
         } catch (error) { console.error('Error saving time entry:', error); }
@@ -216,7 +246,7 @@ const Dashboard = () => {
     ];
 
     // Action footer
-    const ActionFooter = () => (
+    const actionFooter = (
         <div className="th-action-footer" style={{
             display: 'flex', alignItems: 'center', gap: '16px',
             padding: '14px 20px',
@@ -250,12 +280,26 @@ const Dashboard = () => {
             </button>
 
             {/* Session info */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {isTracking ? 'Work Session' : isPaused ? 'Session Paused' : 'No active session'}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--slate)', marginTop: '2px' }}>
-                    TrackHub Workspace
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <input
+                    type="text"
+                    value={sessionName}
+                    onChange={(e) => setSessionName(e.target.value)}
+                    placeholder="What are you working on?"
+                    style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--white)',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        outline: 'none',
+                        padding: 0,
+                        width: '100%',
+                        textOverflow: 'ellipsis'
+                    }}
+                />
+                <div style={{ fontSize: '11px', color: 'var(--slate)' }}>
+                    {isTracking ? 'Tracking time...' : isPaused ? 'Session Paused' : 'TrackHub Workspace'}
                 </div>
             </div>
 
@@ -297,9 +341,8 @@ const Dashboard = () => {
 
     return (
         <DashboardLayout
-            title="Overview"
+            title="Dashboard"
             tagline="Stay focused. Track your progress."
-            footer={<ActionFooter />}
         >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -340,6 +383,89 @@ const Dashboard = () => {
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* Clock In / Out Panel */}
+                {actionFooter}
+
+                {/* Bottom Row: Recent Activity & Pomodoro */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Recent Sessions */}
+                    <div className="th-card" style={{ padding: '20px' }}>
+                        <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--white)', marginBottom: '14px' }}>
+                            Recent Sessions
+                        </h2>
+                        {timeEntries.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {timeEntries.slice(0, 4).map((entry, idx) => (
+                                    <div key={idx} style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                        padding: '10px 12px', borderRadius: '8px', background: 'var(--canvas)',
+                                        border: '1px solid var(--border)',
+                                    }}>
+                                        <div>
+                                            <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--white)' }}>
+                                                {entry.description || 'Work Session'}
+                                            </div>
+                                            <div style={{ fontSize: '11px', color: 'var(--slate)', marginTop: '2px' }}>
+                                                {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {entry.startTime}–{entry.endTime}
+                                            </div>
+                                        </div>
+                                        <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--cyan)' }}>
+                                            {entry.hours}h
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: '13px', color: 'var(--slate)' }}>No recent sessions.</div>
+                        )}
+                    </div>
+
+                    {/* Pomodoro Timer */}
+                    <div className="th-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--white)', marginBottom: '14px', alignSelf: 'flex-start' }}>
+                            Pomodoro Timer
+                        </h2>
+
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'var(--canvas)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                            {['Work', 'Short Break', 'Long Break'].map(mode => (
+                                <button
+                                    key={mode}
+                                    onClick={() => setPomodoro(mode)}
+                                    style={{
+                                        background: pomodoroMode === mode ? 'var(--surface)' : 'transparent',
+                                        color: pomodoroMode === mode ? 'var(--cyan)' : 'var(--slate)',
+                                        border: pomodoroMode === mode ? '1px solid var(--border)' : '1px solid transparent',
+                                        padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {mode}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div style={{ fontSize: '56px', fontWeight: '800', color: 'var(--white)', letterSpacing: '0.05em', lineHeight: 1, marginBottom: '24px', fontFamily: "'Inter', monospace" }}>
+                            {formatPomodoroTime(pomodoroTime)}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button
+                                onClick={() => setIsPomodoroActive(!isPomodoroActive)}
+                                className="th-btn-primary"
+                                style={{ padding: '10px 24px', fontSize: '14px' }}
+                            >
+                                {isPomodoroActive ? 'PAUSE' : 'START'}
+                            </button>
+                            <button
+                                onClick={() => setPomodoro(pomodoroMode)}
+                                className="th-btn-ghost"
+                                style={{ padding: '10px 24px', fontSize: '14px' }}
+                            >
+                                RESET
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Weekly Activity Chart — full width */}
@@ -392,36 +518,6 @@ const Dashboard = () => {
                         })}
                     </div>
                 </div>
-
-                {/* Recent Activity */}
-                {timeEntries.length > 0 && (
-                    <div className="th-card" style={{ padding: '20px' }}>
-                        <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--white)', marginBottom: '14px' }}>
-                            Recent Sessions
-                        </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {timeEntries.slice(0, 4).map((entry, idx) => (
-                                <div key={idx} style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '10px 12px', borderRadius: '8px', background: 'var(--canvas)',
-                                    border: '1px solid var(--border)',
-                                }}>
-                                    <div>
-                                        <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--white)' }}>
-                                            {entry.description || 'Work Session'}
-                                        </div>
-                                        <div style={{ fontSize: '11px', color: 'var(--slate)', marginTop: '2px' }}>
-                                            {new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {entry.startTime}–{entry.endTime}
-                                        </div>
-                                    </div>
-                                    <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--cyan)' }}>
-                                        {entry.hours}h
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
         </DashboardLayout>
     );

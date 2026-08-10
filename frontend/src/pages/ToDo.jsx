@@ -112,7 +112,7 @@ const ToDo = () => {
                     {/* Scrollable dates */}
                     <div
                         ref={dateScrollRef}
-                        style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        style={{ flex: 1, minWidth: 0, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
                         <div style={{ display: 'flex', gap: '8px', paddingBottom: '4px' }}>
                             {dates.map((date, idx) => {
@@ -169,7 +169,7 @@ const ToDo = () => {
             {/* Main content + Mini calendar */}
             <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
                 {/* Task list */}
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: 6, minWidth: 0 }}>
                     {/* Date heading */}
                     <div style={{ marginBottom: '16px' }}>
                         <h2 style={{ fontSize: '15px', fontWeight: '600', color: 'var(--white)' }}>
@@ -289,7 +289,7 @@ const ToDo = () => {
                 </div>
 
                 {/* Mini Calendar */}
-                <div className="th-card hidden lg:block" style={{ flexShrink: 0, width: '220px', padding: '16px', position: 'sticky', top: 0 }}>
+                <div className="th-card hidden lg:flex flex-col" style={{ flex: 4, padding: '16px', position: 'sticky', top: 0, height: 'calc(100vh - 200px)' }}>
                     {/* Month header */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                         <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--white)' }}>
