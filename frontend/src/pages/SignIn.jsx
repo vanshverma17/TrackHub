@@ -103,52 +103,51 @@ const SignIn = () => {
     };
 
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--canvas)', display: 'flex', fontFamily: "'Inter', sans-serif" }}>
-            {/* Left panel — dashboard preview */}
-            <div style={{
-                flex: '0 0 55%', display: 'none', position: 'relative',
-                padding: '40px', alignItems: 'center', justifyContent: 'center',
-                borderRight: '1px solid var(--border)',
-            }} className="lg-flex-center">
-                <style>{`.lg-flex-center { display: none; } @media (min-width: 1024px) { .lg-flex-center { display: flex !important; } }`}</style>
+        <div style={{ minHeight: '100vh', background: 'var(--canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", padding: '24px', position: 'relative' }}>
+            
+            {/* Desktop Brand mark - positioned at the bottom left of the entire screen */}
+            <div style={{ position: 'absolute', bottom: '40px', left: '40px', alignItems: 'center', gap: '14px', zIndex: 10 }} className="desktop-brand">
+                <style>{`.desktop-brand { display: none; } @media (min-width: 1024px) { .desktop-brand { display: flex !important; } }`}</style>
+                <img src={logo} alt="TrackHub" style={{ width: '40px', height: '40px', borderRadius: '8px' }} />
+                <div>
+                    <span style={{ fontSize: '22px', fontWeight: '800', color: 'var(--white)' }}>TrackHub</span>
+                    <span style={{ fontSize: '14px', color: 'var(--slate)', marginLeft: '8px' }}>Track. Build. Improve.</span>
+                </div>
+            </div>
 
-                {/* Subtle grid background */}
+            {/* Main Single Panel Container */}
+            <div style={{
+                display: 'flex', width: '100%', maxWidth: '1040px', minHeight: '600px',
+                background: 'rgba(18, 19, 22, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '24px', overflow: 'hidden', boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
+                position: 'relative'
+            }}>
+                {/* Left panel — dashboard preview */}
                 <div style={{
-                    position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.04,
-                    backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)',
-                    backgroundSize: '40px 40px',
-                }} />
+                    flex: '1', display: 'none', position: 'relative',
+                    padding: '60px', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(0, 0, 0, 0.2)', borderRight: '1px solid rgba(255, 255, 255, 0.03)',
+                }} className="lg-flex-center">
+                    <style>{`.lg-flex-center { display: none; } @media (min-width: 1024px) { .lg-flex-center { display: flex !important; } }`}</style>
 
                 <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '460px' }}>
                     <DashboardPreview />
                 </div>
-
-                {/* Brand mark */}
-                <div style={{ position: 'absolute', bottom: '28px', left: '32px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <img src={logo} alt="TrackHub" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
-                    <div>
-                        <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--white)' }}>TrackHub</span>
-                        <span style={{ fontSize: '12px', color: 'var(--slate)', marginLeft: '6px' }}>Track. Build. Improve.</span>
-                    </div>
                 </div>
-            </div>
 
-            {/* Right panel — sign in form */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 24px' }}>
-                <div style={{ width: '100%', maxWidth: '360px' }}>
-                    {/* Mobile brand */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '32px' }} className="lg-hide">
-                        <style>{`.lg-hide { display: flex; } @media (min-width: 1024px) { .lg-hide { display: none !important; } }`}</style>
-                        <img src={logo} alt="TrackHub" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
-                        <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--white)' }}>TrackHub</span>
-                    </div>
+                {/* Right panel — sign in form */}
+                <div style={{ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 32px' }}>
+                    <div style={{ width: '100%', maxWidth: '360px' }}>
+                        {/* Mobile brand */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '40px' }} className="lg-hide">
+                            <style>{`.lg-hide { display: flex; } @media (min-width: 1024px) { .lg-hide { display: none !important; } }`}</style>
+                            <img src={logo} alt="TrackHub" style={{ width: '28px', height: '28px', borderRadius: '6px' }} />
+                            <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--white)' }}>TrackHub</span>
+                        </div>
 
-                    {/* Form card */}
-                    <div style={{
-                        background: 'var(--surface)', border: '1px solid var(--border)',
-                        borderRadius: '16px', padding: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
-                    }}>
-                        <div style={{ marginBottom: '24px' }}>
+                        {/* Form area */}
+                        <div style={{ width: '100%' }}>
+                            <div style={{ marginBottom: '32px' }}>
                             <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--white)', margin: '0 0 6px' }}>Welcome back</h1>
                             <p style={{ fontSize: '13px', color: 'var(--slate)', margin: 0 }}>Sign in to your account to continue</p>
                         </div>
@@ -184,33 +183,35 @@ const SignIn = () => {
                             <button
                                 type="submit" disabled={loading}
                                 style={{
-                                    width: '100%', padding: '11px',
+                                    width: '100%', padding: '12px',
                                     border: `1.5px solid ${loading ? 'var(--border)' : 'var(--cyan)'}`,
-                                    borderRadius: '8px', background: 'transparent',
+                                    borderRadius: '8px', background: 'rgba(0, 210, 255, 0.05)',
                                     color: loading ? 'var(--slate)' : 'var(--cyan)',
                                     fontSize: '14px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer',
                                     transition: 'all 0.2s', fontFamily: "'Inter', sans-serif",
-                                    marginTop: '4px',
+                                    marginTop: '8px',
+                                    boxShadow: loading ? 'none' : '0 0 15px rgba(0, 210, 255, 0.25), inset 0 0 10px rgba(0, 210, 255, 0.1)',
                                 }}
-                                onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = 'var(--cyan)'; e.currentTarget.style.color = 'var(--canvas)'; } }}
-                                onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--cyan)'; } }}
+                                onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = 'rgba(0, 210, 255, 0.15)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 210, 255, 0.4), inset 0 0 15px rgba(0, 210, 255, 0.2)'; } }}
+                                onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = 'rgba(0, 210, 255, 0.05)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 210, 255, 0.25), inset 0 0 10px rgba(0, 210, 255, 0.1)'; } }}
                             >
                                 {loading ? "Signing in..." : "Sign In"}
                             </button>
                         </form>
 
-                        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-                            <Link to="/forgot-password" style={{ color: 'var(--slate)', textDecoration: 'none', transition: 'color 0.15s' }}
-                                onMouseEnter={e => e.currentTarget.style.color = 'var(--cyan)'}
-                                onMouseLeave={e => e.currentTarget.style.color = 'var(--slate)'}>
-                                Forgot password?
-                            </Link>
-                            <span style={{ color: 'var(--slate)' }}>
-                                No account?{' '}
-                                <Link to="/signup" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: '600' }}>
-                                    Sign Up
+                            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                                <Link to="/forgot-password" style={{ color: 'var(--slate)', textDecoration: 'none', transition: 'color 0.15s' }}
+                                    onMouseEnter={e => e.currentTarget.style.color = 'var(--cyan)'}
+                                    onMouseLeave={e => e.currentTarget.style.color = 'var(--slate)'}>
+                                    Forgot password?
                                 </Link>
-                            </span>
+                                <span style={{ color: 'var(--slate)' }}>
+                                    No account?{' '}
+                                    <Link to="/signup" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: '600' }}>
+                                        Sign Up
+                                    </Link>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
