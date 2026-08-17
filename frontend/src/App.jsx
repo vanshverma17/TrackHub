@@ -1,14 +1,22 @@
 import './index.css'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import Dashboard from './pages/Dashboard'
-import SignIn from './pages/SignIn'
-import SignUp from './pages/SignUp';
-import LandingPage from './pages/LandingPage';
-import ProjectTracker from './pages/ProjectTracker';
-import TimeTable from './pages/TimeTable';
-import ToDo from './pages/ToDo';
-import Settings from './pages/Settings';
-import Profile from './pages/Profile';
+import { Suspense, lazy } from 'react';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const SignIn = lazy(() => import('./pages/SignIn'));
+const SignUp = lazy(() => import('./pages/SignUp'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const ProjectTracker = lazy(() => import('./pages/ProjectTracker'));
+const TimeTable = lazy(() => import('./pages/TimeTable'));
+const ToDo = lazy(() => import('./pages/ToDo'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Profile = lazy(() => import('./pages/Profile'));
+
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-[50vh]">
+    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2" style={{ borderColor: 'var(--cyan)' }}></div>
+  </div>
+);
 import ProtectedRoute from './components/ProtectedRoute';
 
 function AppWrapper() {
@@ -19,71 +27,73 @@ function AppWrapper() {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow">
-        <Routes location={backgroundLocation || location}>
-          {/* Public Routes */}
-          <Route path='/' element={<LandingPage />} />
-          <Route path='/signin' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />} />
-          <Route path='/signup' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp />} />
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes location={backgroundLocation || location}>
+            {/* Public Routes */}
+            <Route path='/' element={<LandingPage />} />
+            <Route path='/signin' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />} />
+            <Route path='/signup' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp />} />
 
-          {/* Protected Routes */}
-          <Route path='/dashboard' element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-          <Route path='/project-tracker' element={
-            <ProtectedRoute>
-              <ProjectTracker />
-            </ProtectedRoute>
-          } />
-          <Route path='/timetable' element={
-            <ProtectedRoute>
-              <TimeTable />
-            </ProtectedRoute>
-          } />
-          <Route path='/todo' element={
-            <ProtectedRoute>
-              <ToDo />
-            </ProtectedRoute>
-          } />
-
-          {/* Settings as normal route when accessed directly */}
-          {!backgroundLocation && (
-            <Route path='/settings' element={
+            {/* Protected Routes */}
+            <Route path='/dashboard' element={
               <ProtectedRoute>
-                <Settings />
+                <Dashboard />
               </ProtectedRoute>
             } />
-          )}
-
-          {/* Profile as normal route when accessed directly */}
-          {!backgroundLocation && (
-            <Route path='/profile' element={
+            <Route path='/project-tracker' element={
               <ProtectedRoute>
-                <Profile />
+                <ProjectTracker />
               </ProtectedRoute>
             } />
-          )}
-
-          {/* Catch all - redirect to signin */}
-          <Route path='*' element={<Navigate to="/" replace />} />
-        </Routes>
-
-        {/* Modal overlay when Settings opened from within app */}
-        {backgroundLocation && (
-          <Routes>
-            <Route path='/settings' element={
+            <Route path='/timetable' element={
               <ProtectedRoute>
-                <Settings />
+                <TimeTable />
               </ProtectedRoute>
             } />
-            <Route path='/profile' element={
+            <Route path='/todo' element={
               <ProtectedRoute>
-                <Profile />
+                <ToDo />
               </ProtectedRoute>
             } />
+
+            {/* Settings as normal route when accessed directly */}
+            {!backgroundLocation && (
+              <Route path='/settings' element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+            )}
+
+            {/* Profile as normal route when accessed directly */}
+            {!backgroundLocation && (
+              <Route path='/profile' element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+            )}
+
+            {/* Catch all - redirect to signin */}
+            <Route path='*' element={<Navigate to="/" replace />} />
           </Routes>
-        )}
+
+          {/* Modal overlay when Settings opened from within app */}
+          {backgroundLocation && (
+            <Routes>
+              <Route path='/settings' element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+              <Route path='/profile' element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+            </Routes>
+          )}
+        </Suspense>
       </main>
     </div>
   );
