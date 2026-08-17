@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import Dashboard from './pages/Dashboard'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp';
+import LandingPage from './pages/LandingPage';
 import ProjectTracker from './pages/ProjectTracker';
 import TimeTable from './pages/TimeTable';
 import ToDo from './pages/ToDo';
@@ -19,8 +20,9 @@ function AppWrapper() {
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow">
         <Routes location={backgroundLocation || location}>
-          {/* Public Routes - Redirect to dashboard if already logged in */}
-          <Route path='/' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />} />
+          {/* Public Routes */}
+          <Route path='/' element={<LandingPage />} />
+          <Route path='/signin' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignIn />} />
           <Route path='/signup' element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignUp />} />
 
           {/* Protected Routes */}
