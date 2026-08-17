@@ -12,18 +12,26 @@ export const sendEmail = async ({ to, subject, text }) => {
   // To use real emails, uncomment and configure the following:
 
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
+    service: 'gmail', // Use the built-in gmail service to bypass port issues on deployed servers
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS
-    }
+    },
+    connectionTimeout: 10000, // 10 seconds timeout so it doesn't freeze forever
+    greetingTimeout: 10000,
+    socketTimeout: 10000
   });
-  await transporter.sendMail({
-    from: `"TrackHub" <${process.env.SMTP_USER}>`,
-    to,
-    subject,
-    text
-  });
+
+  try {
+    await transporter.sendMail({
+      from: `"TrackHub" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      text
+    });
+  } catch (error) {
+    console.error("❌ Failed to send email:", error.message);
+    throw new Error("Failed to send verification email. Please try again.");
+  }
 
 };
