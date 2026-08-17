@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaTrashAlt } from "react-icons/fa";
+import { FaTrashAlt, FaArrowLeft } from "react-icons/fa";
 import DashboardLayout from "../components/DashboardLayout";
 import { projectsAPI, tasksAPI } from "../services/api";
 
@@ -549,25 +549,7 @@ const ProjectTracker = () => {
                                                 color: 'var(--white)', transition: 'all 0.15s ease', boxShadow: '0 8px 26px rgba(0,0,0,0.12)',
                                             }}
                                         >
-                                            <button
-                                                type="button"
-                                                data-delete-project
-                                                onClick={() => handleDeleteProject(projectId)}
-                                                title="Delete project"
-                                                style={{
-                                                    position: 'absolute', top: '12px', right: '12px',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    width: '28px', height: '28px', borderRadius: '8px',
-                                                    background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.28)',
-                                                    color: '#F87171', cursor: 'pointer', opacity: 0,
-                                                    transition: 'opacity 0.15s ease, transform 0.15s ease, background 0.15s ease',
-                                                    boxShadow: '0 8px 18px rgba(239,68,68,0.12)'
-                                                }}
-                                            >
-                                                <FaTrashAlt size={12} />
-                                            </button>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', gap: '8px', paddingRight: '32px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', gap: '8px' }}>
                                                 <button
                                                     type="button"
                                                     onClick={() => openProject(project)}
@@ -585,43 +567,42 @@ const ProjectTracker = () => {
                                                         <span>{project.name || 'Untitled Project'}</span>
                                                     </div>
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        openProjectModal(project);
-                                                    }}
-                                                    style={{
-                                                        background: 'var(--canvas)', border: '1px solid var(--border)', borderRadius: '7px',
-                                                        color: 'var(--slate)', cursor: 'pointer', fontSize: '11px', fontWeight: '600', padding: '6px 8px'
-                                                    }}
-                                                >
-                                                    Rename
-                                                </button>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            openProjectModal(project);
+                                                        }}
+                                                        style={{
+                                                            background: 'var(--canvas)', border: '1px solid var(--border)', borderRadius: '7px',
+                                                            color: 'var(--slate)', cursor: 'pointer', fontSize: '11px', fontWeight: '600', padding: '6px 8px'
+                                                        }}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        data-delete-project
+                                                        onClick={() => handleDeleteProject(projectId)}
+                                                        title="Delete project"
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            width: '28px', height: '28px', borderRadius: '8px',
+                                                            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.28)',
+                                                            color: '#F87171', cursor: 'pointer', opacity: 0,
+                                                            transition: 'opacity 0.15s ease, transform 0.15s ease, background 0.15s ease',
+                                                            boxShadow: '0 8px 18px rgba(239,68,68,0.12)'
+                                                        }}
+                                                    >
+                                                        <FaTrashAlt size={12} />
+                                                    </button>
+                                                </div>
                                             </div>
 
-                                            <p style={{ margin: '0 0 12px', color: 'var(--slate)', fontSize: '12px', lineHeight: '1.6', minHeight: '40px' }}>
+                                            <p style={{ margin: '0', color: 'var(--slate)', fontSize: '12px', lineHeight: '1.6' }}>
                                                 {project.description || 'No description provided for this project.'}
                                             </p>
-
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px', marginBottom: '14px' }}>
-                                                <div style={{ background: 'var(--canvas)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px' }}>
-                                                    <div style={{ fontSize: '10px', color: 'var(--slate)', marginBottom: '4px' }}>Tasks</div>
-                                                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--white)' }}>{stats.total}</div>
-                                                </div>
-                                                <div style={{ background: 'var(--canvas)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px' }}>
-                                                    <div style={{ fontSize: '10px', color: 'var(--slate)', marginBottom: '4px' }}>Done</div>
-                                                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#4ADE80' }}>{stats.done}</div>
-                                                </div>
-                                                <div style={{ background: 'var(--canvas)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px' }}>
-                                                    <div style={{ fontSize: '10px', color: 'var(--slate)', marginBottom: '4px' }}>Progress</div>
-                                                    <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--cyan)' }}>{stats.progress}%</div>
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--slate)', fontSize: '11px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
-                                                <span>{project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'New'}</span>
-                                            </div>
                                         </div>
                                     );
                                 })}
@@ -636,11 +617,12 @@ const ProjectTracker = () => {
                                     type="button"
                                     onClick={backToProjects}
                                     style={{
-                                        background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px',
-                                        color: 'var(--slate)', cursor: 'pointer', padding: '9px 12px', fontSize: '12px', fontWeight: '600'
+                                        background: 'transparent', border: 'none', color: 'var(--cyan)', cursor: 'pointer', fontSize: '20px', padding: '4px', display: 'flex', alignItems: 'center', transition: 'transform 0.2s'
                                     }}
+                                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                                 >
-                                    ← Projects
+                                    <FaArrowLeft />
                                 </button>
                                 <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--white)' }}>
                                     {selectedProject?.name || 'Project Board'}
@@ -654,7 +636,7 @@ const ProjectTracker = () => {
                                     color: 'var(--slate)', cursor: 'pointer', padding: '9px 12px', fontSize: '12px', fontWeight: '600'
                                 }}
                             >
-                                Rename Project
+                                Edit Project
                             </button>
                         </div>
 
@@ -775,7 +757,7 @@ const ProjectTracker = () => {
                     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '14px', width: '100%', maxWidth: '460px', overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.6)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--border)' }}>
                             <h2 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--white)', margin: 0 }}>
-                                {editingProject ? 'Rename Project' : 'Add Project'}
+                                {editingProject ? 'Edit Project' : 'Add Project'}
                             </h2>
                             <button onClick={() => { setShowProjectModal(false); setEditingProject(null); setProjectForm({ name: '', description: '', color: 'cyan' }); }} style={{ background: 'none', border: 'none', color: 'var(--slate)', cursor: 'pointer', padding: '4px' }}>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
