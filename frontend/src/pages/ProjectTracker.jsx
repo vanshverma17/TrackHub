@@ -3,25 +3,175 @@ import { FaTrashAlt, FaArrowLeft } from "react-icons/fa";
 import DashboardLayout from "../components/DashboardLayout";
 import { projectsAPI, tasksAPI } from "../services/api";
 
-const ProjectTracker = () => {
-    const colorOptions = {
-        blue: { bg: 'rgba(59,130,246,0.12)', text: '#60A5FA', border: 'rgba(59,130,246,0.25)' },
-        green: { bg: 'rgba(34,197,94,0.12)', text: '#4ADE80', border: 'rgba(34,197,94,0.25)' },
-        red: { bg: 'rgba(239,68,68,0.12)', text: '#F87171', border: 'rgba(239,68,68,0.25)' },
-        yellow: { bg: 'rgba(234,179,8,0.12)', text: '#FACC15', border: 'rgba(234,179,8,0.25)' },
-        purple: { bg: 'rgba(168,85,247,0.12)', text: '#C084FC', border: 'rgba(168,85,247,0.25)' },
-        orange: { bg: 'rgba(249,115,22,0.12)', text: '#FB923C', border: 'rgba(249,115,22,0.25)' },
-        teal: { bg: 'rgba(20,184,166,0.12)', text: '#2DD4BF', border: 'rgba(20,184,166,0.25)' },
-        gray: { bg: 'rgba(107,114,128,0.12)', text: '#9CA3AF', border: 'rgba(107,114,128,0.25)' },
-        indigo: { bg: 'rgba(99,102,241,0.12)', text: '#818CF8', border: 'rgba(99,102,241,0.25)' },
-        cyan: { bg: 'rgba(0,210,255,0.1)', text: 'var(--cyan)', border: 'rgba(0,210,255,0.25)' },
-    };
+const colorOptions = {
+    blue: { bg: 'rgba(59,130,246,0.12)', text: '#60A5FA', border: 'rgba(59,130,246,0.25)' },
+    green: { bg: 'rgba(34,197,94,0.12)', text: '#4ADE80', border: 'rgba(34,197,94,0.25)' },
+    red: { bg: 'rgba(239,68,68,0.12)', text: '#F87171', border: 'rgba(239,68,68,0.25)' },
+    yellow: { bg: 'rgba(234,179,8,0.12)', text: '#FACC15', border: 'rgba(234,179,8,0.25)' },
+    purple: { bg: 'rgba(168,85,247,0.12)', text: '#C084FC', border: 'rgba(168,85,247,0.25)' },
+    orange: { bg: 'rgba(249,115,22,0.12)', text: '#FB923C', border: 'rgba(249,115,22,0.25)' },
+    teal: { bg: 'rgba(20,184,166,0.12)', text: '#2DD4BF', border: 'rgba(20,184,166,0.25)' },
+    gray: { bg: 'rgba(107,114,128,0.12)', text: '#9CA3AF', border: 'rgba(107,114,128,0.25)' },
+    indigo: { bg: 'rgba(99,102,241,0.12)', text: '#818CF8', border: 'rgba(99,102,241,0.25)' },
+    cyan: { bg: 'rgba(0,210,255,0.1)', text: 'var(--cyan)', border: 'rgba(0,210,255,0.25)' },
+};
 
-    const solidColors = {
-        blue: '#3B82F6', green: '#22C55E', red: '#EF4444', yellow: '#EAB308',
-        purple: '#A855F7', orange: '#F97316', teal: '#14B8A6', gray: '#6B7280',
-        indigo: '#6366F1', cyan: '#00D2FF',
-    };
+const solidColors = {
+    blue: '#3B82F6', green: '#22C55E', red: '#EF4444', yellow: '#EAB308',
+    purple: '#A855F7', orange: '#F97316', teal: '#14B8A6', gray: '#6B7280',
+    indigo: '#6366F1', cyan: '#00D2FF',
+};
+
+const formatDateToDisplay = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const TaskCard = ({ task, column, draggingTaskId, onDragStart, onDragEnd, onEdit, onDelete }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+        <div
+            draggable
+            onDragStart={(e) => onDragStart(e, task, column)}
+            onDragEnd={onDragEnd}
+            onClick={() => onEdit(task, column)}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{
+                background: 'var(--canvas)', border: `1px solid ${draggingTaskId === task.id ? 'var(--cyan)' : 'var(--border)'}`,
+                borderRadius: '10px', padding: '14px', marginBottom: '8px', cursor: 'pointer',
+                opacity: draggingTaskId === task.id ? 0.6 : 1,
+                transition: 'border-color 0.15s, opacity 0.15s, transform 0.15s',
+                position: 'relative',
+                userSelect: 'none',
+                transform: isHovered ? 'translateY(-1px)' : 'translateY(0)',
+                boxShadow: isHovered ? '0 10px 18px rgba(0, 0, 0, 0.18)' : 'none',
+            }}
+        >
+            <button
+                onClick={(e) => onDelete(e, task.id, column)}
+                aria-label={`Delete ${task.title}`}
+                style={{
+                    position: 'absolute', top: '10px', right: '10px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '28px', height: '28px',
+                    background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.28)',
+                    borderRadius: '8px', padding: '0', cursor: 'pointer',
+                    color: '#F87171',
+                    opacity: isHovered ? 1 : 0,
+                    transform: isHovered ? 'scale(1)' : 'scale(0.9)',
+                    transition: 'opacity 0.15s ease, transform 0.15s ease, background 0.15s ease',
+                    boxShadow: isHovered ? '0 8px 18px rgba(239,68,68,0.18)' : 'none',
+                }}
+                title="Delete task"
+            >
+                <FaTrashAlt size={12} />
+            </button>
+
+            <h3 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--white)', marginBottom: '6px', paddingRight: '36px', lineHeight: '1.4' }}>
+                {task.title}
+            </h3>
+            {task.description && (
+                <p style={{ fontSize: '11px', color: 'var(--slate)', marginBottom: '10px', lineHeight: '1.5', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                    {task.description}
+                </p>
+            )}
+            {task.tag && (
+                <span style={{
+                    display: 'inline-block', padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: '600',
+                    letterSpacing: '0.05em', marginBottom: '10px',
+                    background: colorOptions[task.tagColor || 'cyan']?.bg || colorOptions.cyan.bg,
+                    color: colorOptions[task.tagColor || 'cyan']?.text || colorOptions.cyan.text,
+                    border: `1px solid ${colorOptions[task.tagColor || 'cyan']?.border || colorOptions.cyan.border}`,
+                }}>
+                    {task.tag}
+                </span>
+            )}
+            {task.dueDate && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--slate)" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <span style={{ fontSize: '11px', color: 'var(--slate)' }}>{formatDateToDisplay(task.dueDate)}</span>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const Column = ({ title, count, column, tasks: colTasks, indicatorColor, onDragOver, onDrop, onAddNewTask, draggingTaskId, onDragStart, onDragEnd, onEditTask, onDeleteTask }) => (
+    <div
+        style={{ flex: 1, minWidth: '260px' }}
+        onDragEnter={onDragOver} onDragOver={onDragOver}
+        onDrop={(e) => onDrop(e, column)}
+    >
+        <div
+            style={{
+                background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px',
+                padding: '14px', minHeight: '500px', display: 'flex', flexDirection: 'column',
+            }}
+            onDragEnter={onDragOver} onDragOver={onDragOver}
+            onDrop={(e) => onDrop(e, column)}
+        >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: indicatorColor }} />
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--slate)', letterSpacing: '0.1em' }}>
+                        {title}
+                    </span>
+                    <span style={{
+                        fontSize: '11px', fontWeight: '600', padding: '1px 7px', borderRadius: '20px',
+                        background: 'var(--border)', color: 'var(--slate)',
+                    }}>
+                        {count}
+                    </span>
+                </div>
+            </div>
+
+            <div
+                style={{ flex: 1 }}
+                onDragEnter={onDragOver} onDragOver={onDragOver}
+                onDrop={(e) => onDrop(e, column)}
+            >
+                {colTasks.map(task => (
+                    <TaskCard 
+                        key={task.id} 
+                        task={task} 
+                        column={column} 
+                        draggingTaskId={draggingTaskId}
+                        onDragStart={onDragStart}
+                        onDragEnd={onDragEnd}
+                        onEdit={onEditTask}
+                        onDelete={onDeleteTask}
+                    />
+                ))}
+            </div>
+
+            <button
+                onClick={() => onAddNewTask(column)}
+                style={{
+                    width: '100%', padding: '9px', marginTop: '8px',
+                    border: '1.5px dashed var(--border)', borderRadius: '8px',
+                    background: 'transparent', color: 'var(--slate)', cursor: 'pointer',
+                    fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                    transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--cyan)'; e.currentTarget.style.color = 'var(--cyan)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--slate)'; }}
+            >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Task
+            </button>
+        </div>
+    </div>
+);
+
+const ProjectTracker = () => {
 
     const [searchQuery, setSearchQuery] = useState("");
     const [showModal, setShowModal] = useState(false);
@@ -181,7 +331,30 @@ const ProjectTracker = () => {
         e.dataTransfer.setData("application/json", payload);
         e.dataTransfer.setData("taskId", task.id);
         e.dataTransfer.setData("sourceColumn", column);
-        try { e.dataTransfer.setDragImage(e.currentTarget, 24, 24); } catch { }
+        
+        try { 
+            const clone = e.currentTarget.cloneNode(true);
+            clone.style.opacity = '1';
+            clone.style.position = 'absolute';
+            clone.style.top = '-9999px';
+            clone.style.left = '-9999px';
+            clone.style.width = `${e.currentTarget.offsetWidth}px`;
+            clone.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.5)';
+            clone.style.transform = 'rotate(3deg) scale(1.02)';
+            clone.style.pointerEvents = 'none';
+            clone.style.zIndex = '9999';
+            clone.style.transition = 'none';
+            
+            const deleteBtn = clone.querySelector('button');
+            if(deleteBtn) deleteBtn.style.display = 'none';
+            
+            document.body.appendChild(clone);
+            e.dataTransfer.setDragImage(clone, e.nativeEvent.offsetX || 20, e.nativeEvent.offsetY || 20); 
+            setTimeout(() => {
+                if (clone.parentNode) clone.parentNode.removeChild(clone);
+            }, 50);
+        } catch { }
+
         dragMetaRef.current = { taskId: String(task.id), sourceColumn: column };
         setDraggingTaskId(task.id); setDraggedTask(task); setDraggedFrom(column);
     };
@@ -253,12 +426,6 @@ const ProjectTracker = () => {
         setModalColumn(column); setEditingTask(null);
         setFormData({ title: "", description: "", tag: "", tagColor: "cyan", startDate: "", dueDate: "" });
         setShowModal(true);
-    };
-
-    const formatDateToDisplay = (dateString) => {
-        if (!dateString) return "";
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
     const formatDateToInput = (displayDate) => {
@@ -383,140 +550,6 @@ const ProjectTracker = () => {
         { key: 'inProgress', label: 'IN PROGRESS', indicatorColor: 'var(--cyan)' },
         { key: 'done', label: 'DONE', indicatorColor: '#4ADE80' },
     ];
-
-    const TaskCard = ({ task, column }) => {
-        const [isHovered, setIsHovered] = useState(false);
-
-        return (
-            <div
-                draggable
-                onDragStart={(e) => handleDragStart(e, task, column)}
-                onDragEnd={handleDragEnd}
-                onClick={() => handleEditTask(task, column)}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                style={{
-                    background: 'var(--canvas)', border: `1px solid ${draggingTaskId === task.id ? 'var(--cyan)' : 'var(--border)'}`,
-                    borderRadius: '10px', padding: '14px', marginBottom: '8px', cursor: 'pointer',
-                    opacity: draggingTaskId === task.id ? 0.6 : 1,
-                    transition: 'border-color 0.15s, opacity 0.15s, transform 0.15s',
-                    position: 'relative',
-                    userSelect: 'none',
-                    transform: isHovered ? 'translateY(-1px)' : 'translateY(0)',
-                    boxShadow: isHovered ? '0 10px 18px rgba(0, 0, 0, 0.18)' : 'none',
-                }}
-            >
-                <button
-                    onClick={(e) => handleDeleteTask(e, task.id, column)}
-                    aria-label={`Delete ${task.title}`}
-                    style={{
-                        position: 'absolute', top: '10px', right: '10px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        width: '28px', height: '28px',
-                        background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.28)',
-                        borderRadius: '8px', padding: '0', cursor: 'pointer',
-                        color: '#F87171',
-                        opacity: isHovered ? 1 : 0,
-                        transform: isHovered ? 'scale(1)' : 'scale(0.9)',
-                        transition: 'opacity 0.15s ease, transform 0.15s ease, background 0.15s ease',
-                        boxShadow: isHovered ? '0 8px 18px rgba(239,68,68,0.18)' : 'none',
-                    }}
-                    title="Delete task"
-                >
-                    <FaTrashAlt size={12} />
-                </button>
-
-                <h3 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--white)', marginBottom: '6px', paddingRight: '36px', lineHeight: '1.4' }}>
-                    {task.title}
-                </h3>
-                {task.description && (
-                    <p style={{ fontSize: '11px', color: 'var(--slate)', marginBottom: '10px', lineHeight: '1.5', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                        {task.description}
-                    </p>
-                )}
-                {task.tag && (
-                    <span style={{
-                        display: 'inline-block', padding: '3px 8px', borderRadius: '5px', fontSize: '10px', fontWeight: '600',
-                        letterSpacing: '0.05em', marginBottom: '10px',
-                        background: colorOptions[task.tagColor || 'cyan']?.bg || colorOptions.cyan.bg,
-                        color: colorOptions[task.tagColor || 'cyan']?.text || colorOptions.cyan.text,
-                        border: `1px solid ${colorOptions[task.tagColor || 'cyan']?.border || colorOptions.cyan.border}`,
-                    }}>
-                        {task.tag}
-                    </span>
-                )}
-                {task.dueDate && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--slate)" strokeWidth="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" />
-                            <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                        <span style={{ fontSize: '11px', color: 'var(--slate)' }}>{formatDateToDisplay(task.dueDate)}</span>
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    const Column = ({ title, count, column, tasks: colTasks, indicatorColor }) => (
-        <div
-            style={{ flex: 1, minWidth: '260px' }}
-            onDragEnter={handleDragOver} onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, column)}
-        >
-            <div
-                style={{
-                    background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px',
-                    padding: '14px', minHeight: '500px', display: 'flex', flexDirection: 'column',
-                }}
-                onDragEnter={handleDragOver} onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, column)}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: indicatorColor }} />
-                        <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--slate)', letterSpacing: '0.1em' }}>
-                            {title}
-                        </span>
-                        <span style={{
-                            fontSize: '11px', fontWeight: '600', padding: '1px 7px', borderRadius: '20px',
-                            background: 'var(--border)', color: 'var(--slate)',
-                        }}>
-                            {count}
-                        </span>
-                    </div>
-                </div>
-
-                <div
-                    style={{ flex: 1 }}
-                    onDragEnter={handleDragOver} onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, column)}
-                >
-                    {filteredTasks(colTasks).map(task => (
-                        <TaskCard key={task.id} task={task} column={column} />
-                    ))}
-                </div>
-
-                <button
-                    onClick={() => addNewTask(column)}
-                    style={{
-                        width: '100%', padding: '9px', marginTop: '8px',
-                        border: '1.5px dashed var(--border)', borderRadius: '8px',
-                        background: 'transparent', color: 'var(--slate)', cursor: 'pointer',
-                        fontSize: '12px', fontWeight: '500', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                        transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--cyan)'; e.currentTarget.style.color = 'var(--cyan)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--slate)'; }}
-                >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Add Task
-                </button>
-            </div>
-        </div>
-    );
 
     return (
         <DashboardLayout title="Project Tracker" tagline="Manage your work streams." noPadding>
@@ -688,8 +721,16 @@ const ProjectTracker = () => {
                                         title={label}
                                         count={filteredTasks(tasks[key]).length}
                                         column={key}
-                                        tasks={tasks[key]}
+                                        tasks={filteredTasks(tasks[key])}
                                         indicatorColor={indicatorColor}
+                                        onDragOver={handleDragOver}
+                                        onDrop={handleDrop}
+                                        onAddNewTask={addNewTask}
+                                        draggingTaskId={draggingTaskId}
+                                        onDragStart={handleDragStart}
+                                        onDragEnd={handleDragEnd}
+                                        onEditTask={handleEditTask}
+                                        onDeleteTask={handleDeleteTask}
                                     />
                                 ))}
                             </div>
