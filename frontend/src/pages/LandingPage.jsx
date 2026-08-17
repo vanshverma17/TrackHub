@@ -680,7 +680,7 @@ function FeatureCard({ feat, num }) {
 
       <div className="relative z-10">
         {/* Feature Icon */}
-        <div 
+        <div
           className="w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-6"
           style={{
             background: feat.gradient || "rgba(0,210,255,0.05)",

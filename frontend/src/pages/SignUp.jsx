@@ -68,6 +68,11 @@ const SignUp = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const [formData, setFormData] = useState({ name: "", email: "", password: "", agreeToTerms: false });
+    
+    // Email Verification State
+    const [step, setStep] = useState(1);
+    const [otp, setOtp] = useState("");
+    const [registeredEmail, setRegisteredEmail] = useState("");
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -80,19 +85,32 @@ const SignUp = () => {
         if (!formData.agreeToTerms) { setError("Please agree to the terms and conditions"); return; }
         setLoading(true); setError("");
         try {
-            const response = await authAPI.register({ name: formData.name, email: formData.email, password: formData.password });
-            const { token, user } = response.data;
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            navigate('/dashboard');
+            await authAPI.register({ name: formData.name, email: formData.email, password: formData.password });
+            setRegisteredEmail(formData.email);
+            setStep(2);
         } catch (err) {
             setError(err.response?.data?.error || "Registration failed. Please try again.");
         } finally { setLoading(false); }
     };
 
+    const handleVerify = async (e) => {
+        e.preventDefault();
+        if (!otp) { setError("Please enter the verification code"); return; }
+        setLoading(true); setError("");
+        try {
+            const response = await authAPI.verifyEmail({ email: registeredEmail, code: otp });
+            const { token, user } = response.data;
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            navigate('/dashboard');
+        } catch (err) {
+            setError(err.response?.data?.error || "Verification failed. Please check the code.");
+        } finally { setLoading(false); }
+    };
+
     return (
         <div style={{ minHeight: '100vh', background: 'var(--canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', sans-serif", padding: '24px', position: 'relative' }}>
-            
+
             {/* Desktop Brand mark - positioned at the bottom left of the entire screen */}
             <div style={{ position: 'absolute', bottom: '40px', left: '40px', alignItems: 'center', gap: '14px', zIndex: 10 }} className="desktop-brand">
                 <style>{`.desktop-brand { display: none; } @media (min-width: 1024px) { .desktop-brand { display: flex !important; } }`}</style>
@@ -117,9 +135,9 @@ const SignUp = () => {
                     background: 'rgba(0, 0, 0, 0.2)', borderRight: '1px solid rgba(255, 255, 255, 0.03)',
                 }} className="lg-flex-center-su">
                     <style>{`.lg-flex-center-su { display: none; } @media (min-width: 1024px) { .lg-flex-center-su { display: flex !important; } }`}</style>
-                <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '460px' }}>
-                    <DashboardPreview />
-                </div>
+                    <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '460px' }}>
+                        <DashboardPreview />
+                    </div>
                 </div>
 
                 {/* Right panel — sign up form */}
@@ -134,106 +152,167 @@ const SignUp = () => {
 
                         {/* Form area */}
                         <div style={{ width: '100%' }}>
-                            <div style={{ marginBottom: '32px' }}>
-                            <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--white)', margin: '0 0 6px' }}>Create account</h1>
-                            <p style={{ fontSize: '13px', color: 'var(--slate)', margin: 0 }}>Get started with TrackHub for free</p>
-                        </div>
+                            {step === 1 ? (
+                                <>
+                                    <div style={{ marginBottom: '32px' }}>
+                                        <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--white)', margin: '0 0 6px' }}>Create account</h1>
+                                        <p style={{ fontSize: '13px', color: 'var(--slate)', margin: 0 }}>Get started with TrackHub for free</p>
+                                    </div>
 
-                        {error && (
-                            <div style={{ marginBottom: '16px', padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#F87171', fontSize: '13px' }}>
-                                {error}
-                            </div>
-                        )}
-
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>FULL NAME</label>
-                                <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Your name" required className="th-input" />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>EMAIL</label>
-                                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" required className="th-input" />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>PASSWORD</label>
-                                <div style={{ position: 'relative' }}>
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        name="password" value={formData.password} onChange={handleChange}
-                                        placeholder="Create a password" required
-                                        className="th-input" style={{ paddingRight: '40px' }}
-                                    />
-                                    <button
-                                        type="button" onClick={() => setShowPassword(!showPassword)}
-                                        style={{
-                                            position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-                                            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', padding: '2px',
-                                        }}
-                                    >
-                                        {showPassword ? (
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
-                                                <line x1="1" y1="1" x2="23" y2="23" />
-                                            </svg>
-                                        ) : (
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
-                                            </svg>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Terms */}
-                            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
-                                <div
-                                    onClick={() => setFormData(prev => ({ ...prev, agreeToTerms: !prev.agreeToTerms }))}
-                                    style={{
-                                        width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0, marginTop: '1px',
-                                        border: `1.5px solid ${formData.agreeToTerms ? 'var(--cyan)' : 'var(--slate-dark)'}`,
-                                        background: formData.agreeToTerms ? 'var(--cyan)' : 'transparent',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        transition: 'all 0.15s', cursor: 'pointer',
-                                    }}
-                                >
-                                    {formData.agreeToTerms && (
-                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--canvas)" strokeWidth="3.5">
-                                            <polyline points="20 6 9 17 4 12" />
-                                        </svg>
+                                    {error && (
+                                        <div style={{ marginBottom: '16px', padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#F87171', fontSize: '13px' }}>
+                                            {error}
+                                        </div>
                                     )}
-                                </div>
-                                <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} style={{ display: 'none' }} />
-                                <span style={{ fontSize: '12px', color: 'var(--slate)', lineHeight: '1.4' }}>
-                                    I agree to the{' '}
-                                    <a href="#" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>Terms of Service</a>
-                                    {' '}and{' '}
-                                    <a href="#" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>Privacy Policy</a>
-                                </span>
-                            </label>
 
-                            <button
-                                type="submit" disabled={loading}
-                                style={{
-                                    width: '100%', padding: '12px',
-                                    border: `1.5px solid ${loading ? 'var(--border)' : 'var(--cyan)'}`,
-                                    borderRadius: '8px', background: 'rgba(0, 210, 255, 0.05)',
-                                    color: loading ? 'var(--slate)' : 'var(--cyan)',
-                                    fontSize: '14px', fontWeight: '700',
-                                    cursor: loading ? 'not-allowed' : 'pointer',
-                                    transition: 'all 0.2s', fontFamily: "'Inter', sans-serif",
-                                    marginTop: '8px',
-                                    boxShadow: loading ? 'none' : '0 0 15px rgba(0, 210, 255, 0.25), inset 0 0 10px rgba(0, 210, 255, 0.1)',
-                                }}
-                                onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = 'rgba(0, 210, 255, 0.15)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 210, 255, 0.4), inset 0 0 15px rgba(0, 210, 255, 0.2)'; } }}
-                                onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = 'rgba(0, 210, 255, 0.05)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 210, 255, 0.25), inset 0 0 10px rgba(0, 210, 255, 0.1)'; } }}
-                            >
-                                {loading ? "Creating account..." : "Create Account"}
-                            </button>
-                        </form>
+                                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>FULL NAME</label>
+                                            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Your name" required className="th-input" />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>EMAIL</label>
+                                            <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" required className="th-input" />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>PASSWORD</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    type={showPassword ? "text" : "password"}
+                                                    name="password" value={formData.password} onChange={handleChange}
+                                                    placeholder="Create a password" required
+                                                    className="th-input" style={{ paddingRight: '40px' }}
+                                                />
+                                                <button
+                                                    type="button" onClick={() => setShowPassword(!showPassword)}
+                                                    style={{
+                                                        position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+                                                        background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', padding: '2px',
+                                                    }}
+                                                >
+                                                    {showPassword ? (
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                                                            <line x1="1" y1="1" x2="23" y2="23" />
+                                                        </svg>
+                                                    ) : (
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                                                        </svg>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Terms */}
+                                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' }}>
+                                            <div
+                                                style={{
+                                                    width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0, marginTop: '1px',
+                                                    border: `1.5px solid ${formData.agreeToTerms ? 'var(--cyan)' : 'var(--slate-dark)'}`,
+                                                    background: formData.agreeToTerms ? 'var(--cyan)' : 'transparent',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    transition: 'all 0.15s', cursor: 'pointer',
+                                                }}
+                                            >
+                                                {formData.agreeToTerms && (
+                                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--canvas)" strokeWidth="3.5">
+                                                        <polyline points="20 6 9 17 4 12" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <input type="checkbox" name="agreeToTerms" checked={formData.agreeToTerms} onChange={handleChange} style={{ display: 'none' }} />
+                                            <span style={{ fontSize: '12px', color: 'var(--slate)', lineHeight: '1.4' }}>
+                                                I agree to the{' '}
+                                                <a href="#" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>Terms of Service</a>
+                                                {' '}and{' '}
+                                                <a href="#" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>Privacy Policy</a>
+                                            </span>
+                                        </label>
+
+                                        <button
+                                            type="submit" disabled={loading}
+                                            style={{
+                                                width: '100%', padding: '12px',
+                                                border: `1.5px solid ${loading ? 'var(--border)' : 'var(--cyan)'}`,
+                                                borderRadius: '8px', background: 'rgba(0, 210, 255, 0.05)',
+                                                color: loading ? 'var(--slate)' : 'var(--cyan)',
+                                                fontSize: '14px', fontWeight: '700',
+                                                cursor: loading ? 'not-allowed' : 'pointer',
+                                                transition: 'all 0.2s', fontFamily: "'Inter', sans-serif",
+                                                marginTop: '8px',
+                                                boxShadow: loading ? 'none' : '0 0 15px rgba(0, 210, 255, 0.25), inset 0 0 10px rgba(0, 210, 255, 0.1)',
+                                            }}
+                                            onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = 'rgba(0, 210, 255, 0.15)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 210, 255, 0.4), inset 0 0 15px rgba(0, 210, 255, 0.2)'; } }}
+                                            onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = 'rgba(0, 210, 255, 0.05)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 210, 255, 0.25), inset 0 0 10px rgba(0, 210, 255, 0.1)'; } }}
+                                        >
+                                            {loading ? "Creating account..." : "Create Account"}
+                                        </button>
+                                    </form>
+                                </>
+                            ) : (
+                                <>
+                                    <div style={{ marginBottom: '32px' }}>
+                                        <h1 style={{ fontSize: '20px', fontWeight: '800', color: 'var(--white)', margin: '0 0 6px' }}>Verify your email</h1>
+                                        <p style={{ fontSize: '13px', color: 'var(--slate)', margin: 0, lineHeight: '1.5' }}>
+                                            We sent a 6-digit code to <strong style={{color: 'var(--white)'}}>{registeredEmail}</strong>
+                                        </p>
+                                    </div>
+
+                                    {error && (
+                                        <div style={{ marginBottom: '16px', padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#F87171', fontSize: '13px' }}>
+                                            {error}
+                                        </div>
+                                    )}
+
+                                    <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: 'var(--slate)', marginBottom: '6px', letterSpacing: '0.06em' }}>VERIFICATION CODE</label>
+                                            <input 
+                                                type="text" 
+                                                value={otp} 
+                                                onChange={(e) => { setOtp(e.target.value.replace(/[^0-9]/g, '')); setError(""); }} 
+                                                placeholder="Enter 6-digit code" 
+                                                required 
+                                                className="th-input" 
+                                                style={{ letterSpacing: '6px', textAlign: 'center', fontSize: '20px', fontWeight: '600', padding: '16px' }} 
+                                                maxLength={6}
+                                            />
+                                        </div>
+                                        <button
+                                            type="submit" disabled={loading || otp.length !== 6}
+                                            style={{
+                                                width: '100%', padding: '12px',
+                                                border: `1.5px solid ${loading || otp.length !== 6 ? 'var(--border)' : 'var(--cyan)'}`,
+                                                borderRadius: '8px', background: 'rgba(0, 210, 255, 0.05)',
+                                                color: loading || otp.length !== 6 ? 'var(--slate)' : 'var(--cyan)',
+                                                fontSize: '14px', fontWeight: '700',
+                                                cursor: loading || otp.length !== 6 ? 'not-allowed' : 'pointer',
+                                                transition: 'all 0.2s', fontFamily: "'Inter', sans-serif",
+                                                marginTop: '8px',
+                                                boxShadow: loading || otp.length !== 6 ? 'none' : '0 0 15px rgba(0, 210, 255, 0.25), inset 0 0 10px rgba(0, 210, 255, 0.1)',
+                                            }}
+                                            onMouseEnter={e => { if (!loading && otp.length === 6) { e.currentTarget.style.background = 'rgba(0, 210, 255, 0.15)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 210, 255, 0.4), inset 0 0 15px rgba(0, 210, 255, 0.2)'; } }}
+                                            onMouseLeave={e => { if (!loading && otp.length === 6) { e.currentTarget.style.background = 'rgba(0, 210, 255, 0.05)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 210, 255, 0.25), inset 0 0 10px rgba(0, 210, 255, 0.1)'; } }}
+                                        >
+                                            {loading ? "Verifying..." : "Verify Email"}
+                                        </button>
+                                        <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setStep(1)}
+                                                style={{ background: 'none', border: 'none', color: 'var(--slate)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline' }}
+                                            >
+                                                Back to sign up
+                                            </button>
+                                        </div>
+                                    </form>
+                                </>
+                            )}
 
                             <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--slate)' }}>
                                 Already have an account?{' '}
-                                <Link to="/" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: '600' }}>Sign In</Link>
+                                <Link to="/signin" style={{ color: 'var(--cyan)', textDecoration: 'none', fontWeight: '600' }}>Sign In</Link>
                             </p>
                         </div>
                     </div>
