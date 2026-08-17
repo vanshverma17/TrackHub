@@ -77,7 +77,7 @@ export const tasksAPI = {
   getByProject: (projectId) => api.get('/tasks', { params: { project: projectId } }),
   create: (taskData) => api.post('/tasks', taskData),
   update: (id, taskData) => api.put(`/tasks/${id}`, taskData),
-  move: (id, status) => api.patch(`/tasks/${id}/move`, { status }),
+  move: (id, status) => api.put(`/tasks/${id}`, { status }),
   delete: (id) => api.delete(`/tasks/${id}`),
 };
 

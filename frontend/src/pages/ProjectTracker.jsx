@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaTrashAlt, FaArrowLeft } from "react-icons/fa";
 import DashboardLayout from "../components/DashboardLayout";
 import { projectsAPI, tasksAPI } from "../services/api";
@@ -172,6 +172,7 @@ const ProjectTracker = () => {
     const [draggingTaskId, setDraggingTaskId] = useState(null);
     const [draggedTask, setDraggedTask] = useState(null);
     const [draggedFrom, setDraggedFrom] = useState(null);
+    const dragMetaRef = useRef(null);
 
     const handleDragStart = (e, task, column) => {
         e.dataTransfer.effectAllowed = "move";
@@ -181,6 +182,7 @@ const ProjectTracker = () => {
         e.dataTransfer.setData("taskId", task.id);
         e.dataTransfer.setData("sourceColumn", column);
         try { e.dataTransfer.setDragImage(e.currentTarget, 24, 24); } catch { }
+        dragMetaRef.current = { taskId: String(task.id), sourceColumn: column };
         setDraggingTaskId(task.id); setDraggedTask(task); setDraggedFrom(column);
     };
 
@@ -188,25 +190,39 @@ const ProjectTracker = () => {
 
     const handleDrop = async (e, column) => {
         e.preventDefault(); e.stopPropagation();
-        let taskId = e.dataTransfer.getData("taskId");
-        let sourceColumn = e.dataTransfer.getData("sourceColumn");
+        let taskId = dragMetaRef.current?.taskId || e.dataTransfer.getData("taskId");
+        let sourceColumn = dragMetaRef.current?.sourceColumn || e.dataTransfer.getData("sourceColumn");
         if (!taskId || !sourceColumn) {
             const text = e.dataTransfer.getData("text/plain");
             if (text) { try { const p = JSON.parse(text); taskId = p?.taskId; sourceColumn = p?.sourceColumn; } catch { } }
         }
+        // Fallback for environments where custom dataTransfer payload is unavailable on drop.
+        if (!taskId && draggingTaskId) taskId = String(draggingTaskId);
+        if (!sourceColumn && draggedFrom) sourceColumn = draggedFrom;
+
+        const normalizedTaskId = taskId ? String(taskId) : "";
+        if (!sourceColumn && normalizedTaskId) {
+            sourceColumn = ['todo', 'inProgress', 'done'].find((key) =>
+                (tasks[key] || []).some((t) => String(t.id) === normalizedTaskId)
+            );
+        }
         if (!selectedProjectId || !taskId || !sourceColumn) {
+            dragMetaRef.current = null;
             setDraggedTask(null); setDraggedFrom(null); setDraggingTaskId(null); return;
         }
-        if (sourceColumn === column) { setDraggedTask(null); setDraggedFrom(null); setDraggingTaskId(null); return; }
+        if (sourceColumn === column) {
+            dragMetaRef.current = null;
+            setDraggedTask(null); setDraggedFrom(null); setDraggingTaskId(null); return;
+        }
 
         let movedTask = null;
         setTasks(prev => {
-            const taskToMove = prev[sourceColumn].find(t => t.id === taskId);
+            const taskToMove = prev[sourceColumn].find(t => String(t.id) === normalizedTaskId);
             movedTask = taskToMove;
             if (taskToMove) {
                 const nextBoard = {
                     ...prev,
-                    [sourceColumn]: prev[sourceColumn].filter(t => t.id !== taskId),
+                    [sourceColumn]: prev[sourceColumn].filter(t => String(t.id) !== normalizedTaskId),
                     [column]: [...prev[column], { ...taskToMove, status: column, completed: column === 'done' }]
                 };
                 setTasksByProject(current => ({ ...current, [selectedProjectId]: nextBoard }));
@@ -215,11 +231,11 @@ const ProjectTracker = () => {
             return prev;
         });
 
-        try { await tasksAPI.move(taskId, column); } catch (err) {
+        try { await tasksAPI.move(normalizedTaskId, column); } catch (err) {
             console.error("Failed to move task:", err);
             if (movedTask) {
                 setTasks(prev => {
-                    const without = prev[column].filter(t => t.id !== taskId);
+                    const without = prev[column].filter(t => String(t.id) !== normalizedTaskId);
                     const reverted = { ...prev, [column]: without, [sourceColumn]: [...prev[sourceColumn], movedTask] };
                     setTasksByProject(current => ({ ...current, [selectedProjectId]: reverted }));
                     return reverted;
@@ -227,10 +243,11 @@ const ProjectTracker = () => {
             }
             setError(err?.response?.data?.error || err?.message || "Failed to move task");
         }
+        dragMetaRef.current = null;
         setDraggedTask(null); setDraggedFrom(null); setDraggingTaskId(null);
     };
 
-    const handleDragEnd = () => { setDraggedTask(null); setDraggedFrom(null); setDraggingTaskId(null); };
+    const handleDragEnd = () => { dragMetaRef.current = null; setDraggedTask(null); setDraggedFrom(null); setDraggingTaskId(null); };
 
     const addNewTask = (column) => {
         setModalColumn(column); setEditingTask(null);
