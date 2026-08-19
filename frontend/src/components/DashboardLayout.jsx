@@ -79,12 +79,15 @@ const DashboardLayout = ({ title, tagline, children, noPadding = false, footer }
                 )}
 
                 {/* Page Content */}
-                <div style={{
-                    flex: 1,
-                    padding: noPadding ? '0' : '24px 32px',
-                    overflowY: 'auto',
-                    overflowX: 'hidden',
-                }}>
+                <div
+                    className={noPadding ? "" : "th-content-pad"}
+                    style={{
+                        flex: 1,
+                        padding: noPadding ? '0' : '24px 32px',
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
+                    }}
+                >
                     {children}
                 </div>
 

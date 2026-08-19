@@ -585,6 +585,7 @@ const ProjectTracker = () => {
                                     return (
                                         <div
                                             key={projectId}
+                                            onClick={() => openProject(project)}
                                             onMouseEnter={(e) => {
                                                 const deleteButton = e.currentTarget.querySelector('[data-delete-project]');
                                                 if (deleteButton) deleteButton.style.opacity = '1';
@@ -597,15 +598,14 @@ const ProjectTracker = () => {
                                                 position: 'relative', border: `1px solid ${palette.border}`,
                                                 borderRadius: '14px', background: 'var(--surface)', padding: '18px',
                                                 color: 'var(--white)', transition: 'all 0.15s ease', boxShadow: '0 8px 26px rgba(0,0,0,0.12)',
+                                                cursor: 'pointer',
                                             }}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', gap: '8px' }}>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openProject(project)}
+                                                <div
                                                     style={{
-                                                        flex: 1, textAlign: 'left', background: 'transparent', border: 'none', color: 'var(--white)',
-                                                        cursor: 'pointer', padding: 0, fontSize: '14px', fontWeight: '700'
+                                                        flex: 1, textAlign: 'left', color: 'var(--white)',
+                                                        fontSize: '14px', fontWeight: '700'
                                                     }}
                                                 >
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -616,7 +616,7 @@ const ProjectTracker = () => {
                                                         }} />
                                                         <span>{project.name || 'Untitled Project'}</span>
                                                     </div>
-                                                </button>
+                                                </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <button
                                                         type="button"
@@ -634,7 +634,10 @@ const ProjectTracker = () => {
                                                     <button
                                                         type="button"
                                                         data-delete-project
-                                                        onClick={() => handleDeleteProject(projectId)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteProject(projectId);
+                                                        }}
                                                         title="Delete project"
                                                         style={{
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',

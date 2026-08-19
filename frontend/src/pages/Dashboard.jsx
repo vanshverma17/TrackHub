@@ -248,93 +248,102 @@ const Dashboard = () => {
     // Action footer
     const actionFooter = (
         <div className="th-action-footer" style={{
-            display: 'flex', alignItems: 'center', gap: '16px',
-            padding: '14px 20px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: '16px', padding: '14px 20px', flexWrap: 'wrap',
         }}>
-            {/* Play/Pause button */}
-            <button
-                onClick={() => {
-                    if (!isTracking) {
-                        if (isPaused) { setIsTracking(true); setIsPaused(false); setStartTime(Date.now() - elapsedTime); }
-                        else handleClockIn();
-                    } else { setIsTracking(false); setIsPaused(true); }
-                }}
-                style={{
-                    width: '38px', height: '38px', borderRadius: '50%', border: '1px solid var(--border)',
-                    background: isTracking ? 'var(--cyan-dim)' : 'transparent',
-                    color: isTracking ? 'var(--cyan)' : 'var(--slate)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                    flexShrink: 0, transition: 'all 0.15s ease',
-                }}
-                aria-label={isTracking ? 'Pause' : 'Play'}
-            >
-                {isTracking ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                    </svg>
-                ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z" />
-                    </svg>
-                )}
-            </button>
-
-            {/* Session info */}
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <input
-                    type="text"
-                    value={sessionName}
-                    onChange={(e) => setSessionName(e.target.value)}
-                    placeholder="What are you working on?"
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'var(--white)',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        outline: 'none',
-                        padding: 0,
-                        width: '100%',
-                        textOverflow: 'ellipsis'
-                    }}
-                />
-                <div style={{ fontSize: '11px', color: 'var(--slate)' }}>
-                    {isTracking ? 'Tracking time...' : isPaused ? 'Session Paused' : 'TrackHub Workspace'}
-                </div>
-            </div>
-
-            {/* Timer display */}
-            <div className="th-timer" style={{ fontSize: '24px', flexShrink: 0 }}>
-                <span style={{ color: 'var(--cyan)' }}>{formatTime(elapsedTime).split(':')[0]}</span>
-                <span style={{ color: 'var(--slate)' }}>:</span>
-                <span style={{ color: 'var(--cyan)' }}>{formatTime(elapsedTime).split(':')[1]}</span>
-                <span style={{ color: 'var(--slate)' }}>:</span>
-                <span style={{ color: 'var(--cyan)' }}>{formatTime(elapsedTime).split(':')[2]}</span>
-            </div>
-
-            {/* Buttons */}
-            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                <button
-                    onClick={handleClockOut}
-                    disabled={!isTracking && !isPaused}
-                    className="th-btn-ghost"
-                    style={{ opacity: (!isTracking && !isPaused) ? 0.4 : 1 }}
-                >
-                    CLOCK OUT
-                </button>
+            {/* Play/Pause button + Session info */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: '1 1 240px', minWidth: '220px' }}>
+                {/* Play/Pause button */}
                 <button
                     onClick={() => {
                         if (!isTracking) {
                             if (isPaused) { setIsTracking(true); setIsPaused(false); setStartTime(Date.now() - elapsedTime); }
                             else handleClockIn();
-                        }
+                        } else { setIsTracking(false); setIsPaused(true); }
                     }}
-                    disabled={isTracking}
-                    className="th-btn-primary"
-                    style={{ opacity: isTracking ? 0.4 : 1 }}
+                    style={{
+                        width: '38px', height: '38px', borderRadius: '50%', border: '1px solid var(--border)',
+                        background: isTracking ? 'var(--cyan-dim)' : 'transparent',
+                        color: isTracking ? 'var(--cyan)' : 'var(--slate)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                        flexShrink: 0, transition: 'all 0.15s ease',
+                    }}
+                    aria-label={isTracking ? 'Pause' : 'Play'}
                 >
-                    CLOCK IN
+                    {isTracking ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                        </svg>
+                    ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    )}
                 </button>
+
+                {/* Session info */}
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <input
+                        type="text"
+                        value={sessionName}
+                        onChange={(e) => setSessionName(e.target.value)}
+                        placeholder="What are you working on?"
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--white)',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            outline: 'none',
+                            padding: 0,
+                            width: '100%',
+                            textOverflow: 'ellipsis'
+                        }}
+                    />
+                    <div style={{ fontSize: '11px', color: 'var(--slate)' }}>
+                        {isTracking ? 'Tracking time...' : isPaused ? 'Session Paused' : 'TrackHub Workspace'}
+                    </div>
+                </div>
+            </div>
+
+            {/* Timer & Buttons container */}
+            <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                gap: '14px', flex: '1 1 auto', flexWrap: 'wrap',
+            }}>
+                {/* Timer display */}
+                <div className="th-timer" style={{ fontSize: '24px', flexShrink: 0, letterSpacing: '0.05em' }}>
+                    <span style={{ color: 'var(--cyan)' }}>{formatTime(elapsedTime).split(':')[0]}</span>
+                    <span style={{ color: 'var(--slate)' }}>:</span>
+                    <span style={{ color: 'var(--cyan)' }}>{formatTime(elapsedTime).split(':')[1]}</span>
+                    <span style={{ color: 'var(--slate)' }}>:</span>
+                    <span style={{ color: 'var(--cyan)' }}>{formatTime(elapsedTime).split(':')[2]}</span>
+                </div>
+
+                {/* Buttons */}
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
+                    <button
+                        onClick={handleClockOut}
+                        disabled={!isTracking && !isPaused}
+                        className="th-btn-ghost"
+                        style={{ opacity: (!isTracking && !isPaused) ? 0.4 : 1, padding: '8px 16px', fontSize: '11px' }}
+                    >
+                        CLOCK OUT
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (!isTracking) {
+                                if (isPaused) { setIsTracking(true); setIsPaused(false); setStartTime(Date.now() - elapsedTime); }
+                                else handleClockIn();
+                            }
+                        }}
+                        disabled={isTracking}
+                        className="th-btn-primary"
+                        style={{ opacity: isTracking ? 0.4 : 1, padding: '8px 16px', fontSize: '11px' }}
+                    >
+                        CLOCK IN
+                    </button>
+                </div>
             </div>
         </div>
     );

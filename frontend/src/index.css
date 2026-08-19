@@ -414,4 +414,17 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     margin-left: 0;
     margin-right: 0;
   }
+
+  .th-content-pad {
+    padding: 16px !important;
+  }
+
+  .th-action-footer {
+    padding: 12px 14px !important;
+    gap: 12px !important;
+  }
+
+  .th-timer {
+    font-size: 20px !important;
+  }
 }
